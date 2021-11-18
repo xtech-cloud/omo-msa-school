@@ -1,0 +1,42 @@
+package proxy
+
+import (
+	"time"
+)
+
+type HonorInfo struct {
+	UID string `json:"uid" bson:"uid"`
+	Name string `json:"name" bson:"name"`
+	Remark string `json:"remark" bson:"remark"`
+	Parent string `json:"parent" bson:"parent"`
+}
+
+type SubjectInfo struct {
+	UID string `json:"uid" bson:"uid"`
+	Name string `json:"name" bson:"name"`
+	Remark string `json:"remark" bson:"remark"`
+}
+
+// 监护人信息
+type CustodianInfo struct {
+	Name string `json:"name" bson:"name"`
+	Phones []string `json:"phones" bson:"phones"`
+	Identity string `json:"identity" bson:"identity"`
+}
+
+type HistoryInfo struct {
+	UID string `json:"uid" bson:"uid"`
+	School string `json:"school" bson:"school"`
+	Grade uint8 `json:"grade" bson:"grade"`
+	Class uint16 `json:"class" bson:"class"`
+	Remark string `json:"remark" bson:"remark"`
+	EnrolYear uint16 `json:"enrol" bson:"enrol"`
+	Created time.Time `json:"created" bson:"created"`
+}
+
+type ClassMember struct {
+	UID string `bson:"uid"`
+	Student string `bson:"student"`
+	Status uint8 `bson:"status"`
+	Remark string `bson:"remark"`
+}
