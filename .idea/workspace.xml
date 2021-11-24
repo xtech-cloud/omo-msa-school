@@ -2,13 +2,25 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a05ba135-6255-4d98-bd13-c6891acdbbe0" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/grpc/classes.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/grpc/school.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/grpc/student.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/grpc/teacher.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bin/xm-msa-school" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dist/xm-msa-school-.tar.gz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/logs/server.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/base.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/cache.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/cache.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/classes.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/classes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/school.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/school.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/student.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/teacher.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/teacher.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/base.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/classes.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/classes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/school.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/school.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/student.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/teacher.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/teacher.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/base.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,6 +67,17 @@
       <directory value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
+    <configuration name="omo-msa-school" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="omo-msa-school" />
+      <working_directory value="$PROJECT_DIR$" />
+      <go_parameters value="-i" />
+      <kind value="FILE" />
+      <filePath value="$PROJECT_DIR$/main.go" />
+      <package value="omo.msa.school" />
+      <directory value="$PROJECT_DIR$" />
+      <output_directory value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
       <module name="omo-msa-school" />
       <working_directory value="$PROJECT_DIR$" />
@@ -90,7 +113,7 @@
     <integration-enabled>true</integration-enabled>
     <environment>
       <map>
-        <entry key="GOPROXY" value="direct" />
+        <entry key="GOPROXY" value="https://mirrors.aliyun.com/goproxy" />
       </map>
     </environment>
   </component>
