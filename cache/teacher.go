@@ -10,8 +10,9 @@ import (
 
 type TeacherInfo struct {
 	baseInfo
-	entity     string
-	user string
+	Entity     string
+	User string
+	Owner string
 	Classes    []string
 	Subjects   []string
 	Tags       []string
@@ -26,8 +27,8 @@ func (mine *TeacherInfo)initInfo(db *nosql.Teacher) {
 	mine.Creator = db.Creator
 	mine.Operator = db.Operator
 	mine.Name = db.Name
-	mine.user = db.User
-	mine.entity = db.Entity
+	mine.User = db.User
+	mine.Entity = db.Entity
 	mine.Subjects = db.Subjects
 	mine.Classes = db.Classes
 	mine.Tags = db.Tags
@@ -43,7 +44,7 @@ func (mine *TeacherInfo)createHistory(school, remark string) *proxy.HistoryInfo 
 	info.UID = uuid
 	info.School = school
 	info.Remark = remark
-	info.Created = time.Now()
+	info.Created = uint64(time.Now().Unix())
 	return info
 }
 
@@ -65,13 +66,19 @@ func (mine *TeacherInfo)IsActive(school string) bool {
 	return true
 }
 
-func (mine *TeacherInfo) UpdateBase(name, cover, operator string, classes, subs []string, props []*pb.PropertyInfo) error {
+func (mine *TeacherInfo) UpdateTags(operator string, tags []string) error {
+	var err error
+	return err
+}
+
+func (mine *TeacherInfo) UpdateBase(name, operator string, classes, subs []string) error {
 	var err error
 	err = nosql.UpdateTeacherBase(mine.UID,name, operator, classes, subs)
 	if err == nil {
 		mine.Name = name
 		mine.Classes = classes
 		mine.Subjects = subs
+		mine.Operator = operator
 	}
 	return err
 }

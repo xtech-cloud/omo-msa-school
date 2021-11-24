@@ -3,6 +3,7 @@ package cache
 import (
 	"errors"
 	"fmt"
+	pb "github.com/xtech-cloud/omo-msp-school/proto/school"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.school/proxy"
 	"omo.msa.school/proxy/nosql"
@@ -17,7 +18,7 @@ type SchoolInfo struct {
 	Scene    string
 	Cover    string
 
-	entity     string
+	Entity     string
 	Honors     []proxy.HonorInfo // 学生荣誉
 	Respects   []proxy.HonorInfo // 教师荣誉
 	Subjects   []proxy.SubjectInfo
@@ -38,9 +39,8 @@ func (mine *SchoolInfo)initInfo(db *nosql.School) {
 	mine.Honors = db.Honors
 	mine.Respects = db.Respects
 	mine.Subjects = db.Subjects
-	mine.entity = db.Entity
+	mine.Entity = db.Entity
 	mine.Status = db.Status
-	//mine.entityInfo,_ = vocabulary.GetEntity(db.Entity)
 	classes,err := nosql.GetClassesBySchool(mine.UID)
 	if err == nil {
 		mine.classes = make([]*ClassInfo, 0, len(classes))
@@ -94,8 +94,8 @@ func (mine *SchoolInfo)UpdateStatus(st uint8, operator string) error {
 }
 
 func (mine *SchoolInfo)IsCustodian(phone string) bool {
-	for _, class := range mine.classes {
-		if class.IsCustodian(phone) {
+	for _, info := range mine.AllStudents() {
+		if info.HadCustodian(phone) {
 			return true
 		}
 	}
@@ -247,7 +247,7 @@ func (mine *SchoolInfo) GetGradeStudents() []*PairIntInfo {
 //endregion
 
 //region Student Fun
-func (mine *SchoolInfo) CreateStudent(operator string, data *pb.ReqStudentAdd) (*StudentInfo, string, error) {
+func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, string, error) {
 	list := make([]proxy.CustodianInfo, 0, 2)
 	if data.Custodians != nil {
 		for _, custodian := range data.Custodians {
@@ -265,7 +265,7 @@ func (mine *SchoolInfo) CreateStudent(operator string, data *pb.ReqStudentAdd) (
 		Month: time.January,
 		Day:   1,
 	}
-	student,err := cacheCtx.createStudent(mine.UID, data.Name, data.Sn, data.Card, operator, date, uint8(data.Sex), list)
+	student,err := cacheCtx.createStudent(mine.UID, data.Name, data.Sn, data.Card, data.Operator, date, uint8(data.Sex), list)
 	if err != nil {
 		return nil, "", err
 	}
@@ -274,7 +274,7 @@ func (mine *SchoolInfo) CreateStudent(operator string, data *pb.ReqStudentAdd) (
 	if class != nil {
 		classUID = class.UID
 		_ = class.AddStudent(student)
-		_ = student.UpdateEnrol(class.EnrolDate, operator)
+		_ = student.UpdateEnrol(class.EnrolDate, data.Operator)
 	}
 	return student, classUID, nil
 }
@@ -298,13 +298,13 @@ func (mine *SchoolInfo) GetStudent(uid string) (*ClassInfo, *StudentInfo) {
 	}
 	for _, class := range mine.classes {
 		students := class.GetStudentsByStatus(StudentActive)
-		for _, student := range students {
-			if student.UID == uid {
-				return class, student
+		for _, studentUid := range students {
+			if studentUid == uid {
+				return class, mine.getStudent(uid)
 			}
 		}
 	}
-	return nil, cacheCtx.getStudent(uid)
+	return nil, cacheCtx.GetStudent(uid)
 }
 
 func (mine *SchoolInfo) GetStudentsByCustodian(phone string) []*StudentInfo {
@@ -369,24 +369,24 @@ func (mine *SchoolInfo) CreateSimpleStudent(name, entity, sn, card, operator str
 	student.initInfo(db)
 	return student, nil
 }
-
-func (mine *SchoolInfo) createStudent(operator string, data *StudentTemp) (*StudentInfo, error) {
-	list := make([]proxy.CustodianInfo, 0, 1)
-	if data.Custodian.Name != "" {
-		list = append(list, data.Custodian)
-	}
-	date := proxy.DateInfo{
-		Year:  uint16(time.Now().Year() - int(data.Grade) + 1),
-		Month: time.January,
-		Day:   1,
-	}
-	student,err := cacheCtx.createStudent(mine.UID, data.Name, data.SN, data.Card, operator, date, data.Sex, list)
-	if err != nil {
-		return nil, err
-	}
-	mine.appendStudent(student, operator, data.Grade, data.Class, 0)
-	return student, nil
-}
+//
+//func (mine *SchoolInfo) createStudent(operator string, data *StudentTemp) (*StudentInfo, error) {
+//	list := make([]proxy.CustodianInfo, 0, 1)
+//	if data.Custodian.Name != "" {
+//		list = append(list, data.Custodian)
+//	}
+//	date := proxy.DateInfo{
+//		Year:  uint16(time.Now().Year() - int(data.Grade) + 1),
+//		Month: time.January,
+//		Day:   1,
+//	}
+//	student,err := cacheCtx.createStudent(mine.UID, data.Name, data.SN, data.Card, operator, date, data.Sex, list)
+//	if err != nil {
+//		return nil, err
+//	}
+//	mine.appendStudent(student, operator, data.Grade, data.Class, 0)
+//	return student, nil
+//}
 
 func (mine *SchoolInfo) appendStudent(student *StudentInfo, operator string, grade uint8, num,kind uint16) {
 	if student == nil {
@@ -407,12 +407,30 @@ func (mine *SchoolInfo) HadStudentBySN(sn string) bool {
 	if sn == "" {
 		return false
 	}
-	for _, class := range mine.classes {
-		if class.HadStudentBySN(sn) {
+	for _, info := range mine.AllStudents() {
+		if info.SN == sn {
 			return true
 		}
 	}
 	return false
+}
+
+func (mine *SchoolInfo) RemoveStudent(uid, operator string) error {
+	if uid == "" {
+		return errors.New("the student uid is empty")
+	}
+	class,info := mine.GetStudent(uid)
+	if info == nil {
+		return errors.New("not found the student")
+	}
+	if info.Entity != "" {
+		return errors.New("the student had bind")
+	}
+	info.Remove(operator)
+	if class != nil {
+		_ = class.RemoveStudent(uid, "the admin delete student", info.ID, StudentDelete)
+	}
+	return nil
 }
 
 func (mine *SchoolInfo) hadStudentByStatus(uid string, st StudentStatus) bool {
@@ -446,7 +464,20 @@ func (mine *SchoolInfo) getStudentByEntity(uid string) *StudentInfo {
 	}
 	all := mine.AllStudents()
 	for _, info := range all {
-		if info.entity == uid {
+		if info.Entity == uid {
+			return info
+		}
+	}
+	return nil
+}
+
+func (mine *SchoolInfo) getStudent(uid string) *StudentInfo {
+	if uid == "" {
+		return nil
+	}
+	all := mine.AllStudents()
+	for _, info := range all {
+		if info.UID == uid {
 			return info
 		}
 	}
@@ -473,9 +504,12 @@ func (mine *SchoolInfo) GetStudentsByStatus(st StudentStatus) []*StudentInfo {
 	for _, class := range mine.classes {
 		array := class.GetStudentsByStatus(st)
 		if len(array) > 0 {
-			for _, info := range array {
-				if !mine.hadStudentIn(list, info.UID) {
-					list = append(list, info)
+			for _, uid := range array {
+				if !mine.hadStudentIn(list, uid) {
+					info := mine.getStudent(uid)
+					if info != nil {
+						list = append(list, info)
+					}
 				}
 			}
 		}
@@ -490,32 +524,6 @@ func (mine *SchoolInfo)hadStudentIn(list []*StudentInfo, uid string) bool {
 		}
 	}
 	return false
-}
-
-func (mine *SchoolInfo) GetStudentBy(entity string) (*ClassInfo, *StudentInfo) {
-	if entity == "" {
-		return nil,nil
-	}
-	for _, class := range mine.classes {
-		info := class.GetStudentByEntity(entity)
-		if info != nil {
-			return class, info
-		}
-	}
-	return nil,nil
-}
-
-func (mine *SchoolInfo) GetStudentBySN(sn string) (*ClassInfo, *StudentInfo) {
-	if sn == "" {
-		return nil,nil
-	}
-	for _, class := range mine.classes {
-		info := class.GetStudentBySN(sn)
-		if info != nil {
-			return class, info
-		}
-	}
-	return nil,nil
 }
 
 func (mine *SchoolInfo) GetStudentByCard(sn string) *StudentInfo {
@@ -563,12 +571,20 @@ func (mine *SchoolInfo)AllTeachers() []*TeacherInfo {
 	return mine.teachers
 }
 
-func (mine *SchoolInfo) GetTeacherBy(entity string) *TeacherInfo {
+func (mine *SchoolInfo)Teachers() []string {
+	list := make([]string, 0, len(mine.teachers))
+	for _, teacher := range mine.teachers {
+		list = append(list, teacher.UID)
+	}
+	return list
+}
+
+func (mine *SchoolInfo) GetTeacherByEntity(entity string) *TeacherInfo {
 	if entity == "" {
 		return nil
 	}
 	for _, item := range mine.teachers {
-		if item.entity == entity {
+		if item.Entity == entity {
 			return item
 		}
 	}
@@ -580,7 +596,7 @@ func (mine *SchoolInfo) GetTeacherByUser(user string) *TeacherInfo {
 		return nil
 	}
 	for _, item := range mine.teachers {
-		if item.user == user {
+		if item.User == user {
 			return item
 		}
 	}
@@ -654,16 +670,16 @@ func (mine *SchoolInfo) HadTeacherByUser(uid string) bool {
 		return false
 	}
 	for _, item := range mine.teachers {
-		if item.user == uid && item.IsActive(mine.UID){
+		if item.User == uid && item.IsActive(mine.UID){
 			return true
 		}
 	}
 	return false
 }
 
-func (mine *SchoolInfo) CreateSimpleTeacher(name, entity, user, operator string) (*TeacherInfo, error) {
+func (mine *SchoolInfo) CreateTeacher(name, entity, user, operator string) (*TeacherInfo, error) {
 	if mine.HadTeacherByUser(user) {
-		return mine.GetTeacherBy(user),nil
+		return mine.GetTeacherByUser(user),nil
 	}
 	teacher, err := Context().createTeacher(name, operator, mine.Scene, entity, user,nil, nil)
 	if err != nil {
@@ -685,7 +701,7 @@ func (mine *SchoolInfo)AppendTeacher(info *TeacherInfo) {
 
 func (mine *SchoolInfo)HadTeacherByEntity(entity string) bool {
 	for _, teacher := range mine.teachers {
-		if teacher.entity == entity {
+		if teacher.Entity == entity {
 			return true
 		}
 	}
@@ -704,7 +720,7 @@ func (mine *SchoolInfo)GetTeachersByPage(page, number uint32) (uint32, uint32, [
 }
 
 func (mine *SchoolInfo)RemoveTeacher(entity, remark string) error {
-	info := mine.GetTeacherBy(entity)
+	info := mine.GetTeacherByEntity(entity)
 	if info == nil {
 		return errors.New("not found the teacher")
 	}
@@ -848,15 +864,15 @@ func (mine *SchoolInfo)GetClassesByPage(page, number uint32) (uint32, uint32, []
 	sort.Slice(mine.classes, func(i, j int) bool {
 		return mine.classes[i].EnrolDate.Year < mine.classes[j].EnrolDate.Year
 	})
-	list := make([]*ClassInfo, 0, number)
-	for i := 0;i < len(mine.classes);i += 1{
-		t := uint32(i) / number + 1
-		if t == page {
-			list = append(list, mine.classes[i])
-		}
-	}
-
-	return total, maxPage, list
+	//list := make([]*ClassInfo, 0, number)
+	//for i := 0;i < len(mine.classes);i += 1{
+	//	t := uint32(i) / number + 1
+	//	if t == page {
+	//		list = append(list, mine.classes[i])
+	//	}
+	//}
+	total, max, list := checkPage(page, number, mine.classes)
+	return total, max ,list.([]*ClassInfo)
 }
 
 func (mine *SchoolInfo)GetClass(uid string) *ClassInfo {

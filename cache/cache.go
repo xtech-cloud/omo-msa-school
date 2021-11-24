@@ -94,12 +94,12 @@ func (mine *cacheContext) GetTeacher(uid string) *TeacherInfo {
 	return nil
 }
 
-func (mine *cacheContext) GetTeacherBy(entity string) *TeacherInfo {
+func (mine *cacheContext) GetTeacherByEntity(entity string) *TeacherInfo {
 	if entity == "" {
 		return nil
 	}
 	for _, item := range mine.teachers {
-		if item.entity == entity {
+		if item.Entity == entity {
 			return item
 		}
 	}
@@ -118,7 +118,7 @@ func (mine *cacheContext) GetTeacherByUser(user string) *TeacherInfo {
 		return nil
 	}
 	for _, item := range mine.teachers {
-		if item.user == user {
+		if item.User == user {
 			return item
 		}
 	}
@@ -188,7 +188,7 @@ func (mine *cacheContext)createStudent(owner, name, sn, sid, operator string, en
 	return student, nil
 }
 
-func (mine *cacheContext) getStudent(uid string) *StudentInfo {
+func (mine *cacheContext) GetStudent(uid string) *StudentInfo {
 	if uid == "" {
 		return nil
 	}
@@ -281,7 +281,7 @@ func (mine *cacheContext) GetStudents(array []string) []*StudentInfo {
 	}
 	list := make([]*StudentInfo, 0, len(array))
 	for _, s := range array {
-		item := mine.getStudent(s)
+		item := mine.GetStudent(s)
 		if item != nil {
 			list = append(list, item)
 		}

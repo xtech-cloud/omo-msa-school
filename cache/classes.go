@@ -29,7 +29,7 @@ type ClassInfo struct {
 	Number    uint16
 	Type      uint8
 	Members   []proxy.ClassMember
-	teachers  []string
+	Teachers  []string
 }
 
 func (mine *ClassInfo)Grade() uint8 {
@@ -60,11 +60,12 @@ func (mine *ClassInfo)initInfo(grade uint8, db *nosql.Class)  {
 	mine.Name = db.Name
 	mine.maxGrade = grade
 	mine.Master = db.Master
+	mine.School = db.School
 	mine.EnrolDate = db.EnrolDate
 	mine.Number = db.Number
 	mine.Members = db.Students
 	mine.Type = db.Type
-	mine.teachers = db.Teachers
+	mine.Teachers = db.Teachers
 }
 
 func (mine *ClassInfo)FullName() string {
@@ -93,13 +94,12 @@ func (mine *ClassInfo)UpdateMaster(master, operator string) error {
 	err := nosql.UpdateClassMaster(mine.UID, master, operator)
 	if err == nil {
 		mine.Master = master
-		mine.masterInfo = Context().GetTeacherBy(master)
 	}
 	return err
 }
 
 func (mine *ClassInfo)HadTeacher(teacher string) bool {
-	for _, s := range mine.teachers {
+	for _, s := range mine.Teachers {
 		if s == teacher {
 			return true
 		}
@@ -113,7 +113,7 @@ func (mine *ClassInfo)AppendTeacher(teacher string) error {
 	}
 	err := nosql.AppendClassTeacher(mine.UID, teacher)
 	if err == nil {
-		mine.teachers = append(mine.teachers, teacher)
+		mine.Teachers = append(mine.Teachers, teacher)
 	}
 	return err
 }
@@ -124,9 +124,9 @@ func (mine *ClassInfo)SubtractTeacher(teacher string) error {
 	}
 	err := nosql.SubtractClassTeacher(mine.UID, teacher)
 	if err == nil {
-		for i:= 0;i < len(mine.teachers);i += 1 {
-			if mine.teachers[i] == teacher {
-				mine.teachers = append(mine.teachers[:i], mine.teachers[i+1:]...)
+		for i:= 0;i < len(mine.Teachers);i += 1 {
+			if mine.Teachers[i] == teacher {
+				mine.Teachers = append(mine.Teachers[:i], mine.Teachers[i+1:]...)
 				break
 			}
 		}
@@ -158,13 +158,13 @@ func (mine *ClassInfo)GetStudentsNumber() int {
 	return len(mine.Members)
 }
 
-func (mine *ClassInfo)GetStudentsByStatus(st StudentStatus) []*StudentInfo {
-	list := make([]*StudentInfo, 0, len(mine.Members))
+func (mine *ClassInfo)GetStudentsByStatus(st StudentStatus) []string {
+	list := make([]string, 0, len(mine.Members))
 	for _, student := range mine.Members {
 		if student.Status == uint8(st) {
 			info := mine.GetStudent(student.Student)
 			if info != nil {
-				list = append(list, info)
+				list = append(list, info.Student)
 			}
 		}
 	}
@@ -202,7 +202,7 @@ func (mine *ClassInfo)HadStudentByStatus(uid string, st StudentStatus) bool {
 	}
 	return false
 }
-=
+
 func (mine *ClassInfo)IsEmpty() bool {
 	if mine.Members == nil || len(mine.Members) < 1 {
 		return true
@@ -223,19 +223,27 @@ func (mine *ClassInfo)GetStudentStatus(uid string) StudentStatus {
 	return StudentDelete
 }
 
-func (mine *ClassInfo)RemoveStudent(uid, remark string, st StudentStatus) error {
-	info := mine.GetStudent(uid)
-	if info == nil {
+func (mine *ClassInfo)GetStudent(uid string) *proxy.ClassMember {
+	for _, student := range mine.Members {
+		if student.Student == uid {
+			return &student
+		}
+	}
+	return nil
+}
+
+func (mine *ClassInfo)RemoveStudent(uid, remark string, id uint64, st StudentStatus) error {
+	if mine.HadStudent(uid) {
 		return nil
 	}
-	uuid := fmt.Sprintf("%s-%d", mine.UID, info.ID)
+	uuid := fmt.Sprintf("%s-%d", mine.UID, id)
 	var err error
 	err = nosql.SubtractClassStudent(mine.UID, uuid)
 	if st == StudentDelete {
 		if err == nil {
-			for i:= 0;i < len(mine.members);i += 1 {
-				if mine.members[i].Student == info.UID {
-					mine.members = append(mine.members[:i], mine.members[i+1:]...)
+			for i:= 0;i < len(mine.Members);i += 1 {
+				if mine.Members[i].Student == uid {
+					mine.Members = append(mine.Members[:i], mine.Members[i+1:]...)
 					break
 				}
 			}
@@ -243,15 +251,15 @@ func (mine *ClassInfo)RemoveStudent(uid, remark string, st StudentStatus) error 
 	}else if st == StudentLeave {
 		tmp := proxy.ClassMember{
 			UID: uuid,
-			Student: info.UID,
+			Student: uid,
 			Status: uint8(st),
 			Remark: remark,
 		}
 		err = nosql.AppendClassStudent(mine.UID, tmp)
 		if err == nil{
-			for i:= 0;i < len(mine.members);i += 1 {
-				if mine.members[i].Student == info.UID {
-					mine.members[i] = tmp
+			for i:= 0;i < len(mine.Members);i += 1 {
+				if mine.Members[i].Student == uid {
+					mine.Members[i] = tmp
 					break
 				}
 			}

@@ -1,9 +1,5 @@
 package proxy
 
-import (
-	"time"
-)
-
 type HonorInfo struct {
 	UID string `json:"uid" bson:"uid"`
 	Name string `json:"name" bson:"name"`
@@ -30,8 +26,8 @@ type HistoryInfo struct {
 	Grade uint8 `json:"grade" bson:"grade"`
 	Class uint16 `json:"class" bson:"class"`
 	Remark string `json:"remark" bson:"remark"`
-	EnrolYear uint16 `json:"enrol" bson:"enrol"`
-	Created time.Time `json:"created" bson:"created"`
+	Enrol string `json:"enrol" bson:"enrol"`
+	Created uint64 `json:"created" bson:"created"`
 }
 
 type ClassMember struct {

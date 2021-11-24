@@ -8,6 +8,7 @@ import (
 	"omo.msa.school/proxy"
 	"omo.msa.school/proxy/nosql"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -80,7 +81,7 @@ func checkPage( page, number uint32, all interface{}) (uint32, uint32, interface
 	return total, maxPage, list.Interface()
 }
 
-func (mine *cacheContext)AllSchools(page, number uint32) []*SchoolInfo {
+func (mine *cacheContext)AllSchools(page, number uint32) (uint32, uint32, []*SchoolInfo) {
 	if len(mine.schools) < 1 {
 		schools,_ := nosql.GetUsableSchools()
 		for _, school := range schools {
@@ -93,13 +94,37 @@ func (mine *cacheContext)AllSchools(page, number uint32) []*SchoolInfo {
 		number = 10
 	}
 	if len(mine.schools) < 1 {
-		return make([]*SchoolInfo, 0, 1)
+		return 0, 0, make([]*SchoolInfo, 0, 1)
 	}
-	_, _, list := checkPage(page, number, mine.schools)
-	return list.([]*SchoolInfo)
+	total, max, list := checkPage(page, number, mine.schools)
+	return total, max ,list.([]*SchoolInfo)
 }
 
-func (mine *cacheContext)createSchoolInfo(name, entity, scene string, maxGrade int) (*SchoolInfo,error) {
+func (mine *cacheContext)AllTeachers(page, number uint32) (uint32, uint32,[]*TeacherInfo) {
+	if number < 1 {
+		number = 10
+	}
+	if len(mine.teachers) < 1 {
+		return 0, 0, make([]*TeacherInfo, 0, 1)
+	}
+	total, max, list := checkPage(page, number, mine.teachers)
+	return total, max, list.([]*TeacherInfo)
+}
+
+func parsePhones(phones string) []string {
+	list := make([]string, 0, 2)
+	if strings.Contains(phones,",") {
+		array := strings.Split(phones,",")
+		for _, item := range array {
+			list = append(list, item)
+		}
+	}else{
+		list = append(list, phones)
+	}
+	return list
+}
+
+func (mine *cacheContext)CreateSchool(name, entity, scene string, maxGrade int) (*SchoolInfo,error) {
 	if scene == "" {
 		return nil, errors.New("the scene uid is empty")
 	}
@@ -189,7 +214,7 @@ func (mine *cacheContext) GetSchoolByEntity(entity string) *SchoolInfo {
 		return nil
 	}
 	for i := 0;i < len(mine.schools);i += 1 {
-		if mine.schools[i].entity == entity {
+		if mine.schools[i].Entity == entity {
 			return mine.schools[i]
 		}
 	}

@@ -20,7 +20,7 @@ type StudentStatus uint8
 type StudentInfo struct {
 	Sex uint8
 	baseInfo
-	entity     string
+	Entity     string
 	SN         string //学号
 	IDCard     string //身份证
 	SID        string //学籍号
@@ -38,7 +38,7 @@ func (mine *StudentInfo) initInfo(db *nosql.Student) {
 	mine.Creator = db.Creator
 	mine.Operator = db.Operator
 	mine.Name = db.Name
-	mine.entity = db.Entity
+	mine.Entity = db.Entity
 	mine.Tags = db.Tags
 	mine.SN = db.SN
 	mine.Sex = db.Sex
@@ -50,10 +50,6 @@ func (mine *StudentInfo) initInfo(db *nosql.Student) {
 	if mine.Custodians == nil {
 		mine.Custodians = make([]proxy.CustodianInfo, 0, 1)
 	}
-}
-
-func (mine *StudentInfo) EntityUID() string {
-	return mine.entity
 }
 
 func (mine *StudentInfo) Birthday() string {
@@ -156,17 +152,22 @@ func (mine *StudentInfo) UpdateEnrol(enrol proxy.DateInfo, operator string) erro
 	return err
 }
 
+func (mine *StudentInfo) UpdateTags(tags []string, operator string) error {
+
+	return nil
+}
+
 func (mine *StudentInfo) BindEntity(entity, operator string) error {
 	err := nosql.UpdateStudentEntity(mine.UID, entity, operator)
 	if err == nil {
-		mine.entity = entity
+		mine.Entity = entity
 		mine.Operator = operator
 	}
 	return err
 }
 
 func (mine *StudentInfo) Remove(operator string) bool {
-	if mine.entity != "" {
+	if mine.Entity != "" {
 		return false
 	}
 	er := nosql.RemoveStudent(mine.UID, operator)

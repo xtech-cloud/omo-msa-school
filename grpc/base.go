@@ -3,7 +3,7 @@ package grpc
 import (
 	"encoding/json"
 	"github.com/micro/go-micro/v2/logger"
-	pb "github.com/xtech-cloud/ogm-msp-school/proto/school"
+	pb "github.com/xtech-cloud/omo-msp-school/proto/school"
 	pbst "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"reflect"
 )
