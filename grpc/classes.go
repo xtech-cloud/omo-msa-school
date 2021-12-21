@@ -35,7 +35,7 @@ func switchClass(info *cache.ClassInfo) *pb.ClassInfo {
 func (mine *ClassService)AddOne(ctx context.Context, in *pb.ReqClassAdd, out *pb.ReplyClassList) error {
 	path := "class.addOne"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Scene)
+	school,_ := cache.Context().GetSchoolScene(in.Scene)
 	if school == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -59,9 +59,9 @@ func (mine *ClassService)AddOne(ctx context.Context, in *pb.ReqClassAdd, out *pb
 func (mine *ClassService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyClassInfo) error {
 	path := "class.getOne"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Parent)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
-		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
@@ -79,9 +79,9 @@ func (mine *ClassService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 func (mine *ClassService)GetList(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyClassList) error {
 	path := "class.getList"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Parent)
+	school,_ := cache.Context().GetSchoolByUID(in.Uid)
 	if school == nil {
-		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
@@ -114,28 +114,26 @@ func (mine *ClassService)GetArray(ctx context.Context, in *pb.RequestList, out *
 func (mine *ClassService)GetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyClassList) error {
 	path := "class.getByFilter"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Parent)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-
-	total, max, list := school.GetClassesByPage(0, 0)
-	out.List = make([]*pb.ClassInfo, 0, len(list))
-	for _, info := range list {
-		tmp := switchClass(info)
-		out.List = append(out.List, tmp)
+	out.List = make([]*pb.ClassInfo, 0, 3)
+	if in.Filter == "student" {
+		class := school.GetClassByEntity(in.Value, cache.StudentActive)
+		if class != nil {
+			out.List = append(out.List, switchClass(class))
+		}
 	}
-	out.Total = total
-	out.Page = max
-	out.Status = outLog(path, out)
+	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
 }
 
 func (mine *ClassService)UpdateOne(ctx context.Context, in *pb.ReqClassUpdate, out *pb.ReplyClassInfo) error {
 	path := "class.updateOne"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Parent)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -159,7 +157,7 @@ func (mine *ClassService)UpdateOne(ctx context.Context, in *pb.ReqClassUpdate, o
 func (mine *ClassService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
 	path := "class.removeOne"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Parent)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -178,7 +176,7 @@ func (mine *ClassService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out 
 func (mine *ClassService)SetMaster(ctx context.Context, in *pb.ReqClassMaster, out *pb.ReplyInfo) error {
 	path := "class.setMaster"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Parent)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -202,7 +200,7 @@ func (mine *ClassService)SetMaster(ctx context.Context, in *pb.ReqClassMaster, o
 func (mine *ClassService)AppendStudent(ctx context.Context, in *pb.ReqClassStudent, out *pb.ReplyClassStudents) error {
 	path := "class.appendStudent"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Parent)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -237,7 +235,7 @@ func (mine *ClassService)AppendStudent(ctx context.Context, in *pb.ReqClassStude
 func (mine *ClassService)SubtractStudent(ctx context.Context, in *pb.ReqClassStudent, out *pb.ReplyClassStudents) error {
 	path := "class.subtractStudent"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Parent)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -269,7 +267,7 @@ func (mine *ClassService)SubtractStudent(ctx context.Context, in *pb.ReqClassStu
 func (mine *ClassService)AppendTeacher(ctx context.Context, in *pb.ReqClassTeacher, out *pb.ReplyList) error {
 	path := "class.appendTeacher"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.School)
+	school,_ := cache.Context().GetSchoolByUID(in.School)
 	if school == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -293,7 +291,7 @@ func (mine *ClassService)AppendTeacher(ctx context.Context, in *pb.ReqClassTeach
 func (mine *ClassService)SubtractTeacher(ctx context.Context, in *pb.ReqClassTeacher, out *pb.ReplyList) error {
 	path := "class.subtractTeacher"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.School)
+	school,_ := cache.Context().GetSchoolByUID(in.School)
 	if school == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil

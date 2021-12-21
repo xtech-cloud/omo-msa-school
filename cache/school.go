@@ -893,6 +893,14 @@ func (mine *SchoolInfo)GetClassByStudent(uid string, st StudentStatus) *ClassInf
 	return nil
 }
 
+func (mine *SchoolInfo)GetClassByEntity(entity string, st StudentStatus) *ClassInfo {
+	student := mine.getStudentByEntity(entity)
+	if student == nil {
+		return nil
+	}
+	return mine.GetClassByStudent(student.UID, st)
+}
+
 func (mine *SchoolInfo)checkClass(name, operator string, enrol proxy.DateInfo, class, kind uint16) *ClassInfo {
 	var info *ClassInfo
 	info = mine.GetClassByEnrol(enrol, class)

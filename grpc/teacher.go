@@ -46,9 +46,9 @@ func switchHistory(info *proxy.HistoryInfo) *pb.HistoryInfo {
 func (mine *TeacherService)AddOne(ctx context.Context, in *pb.ReqTeacherAdd, out *pb.ReplyTeacherInfo) error {
 	path := "teacher.addOne"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Owner)
+	school,_ := cache.Context().GetSchoolByUID(in.Owner)
 	if school == nil {
-		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
@@ -153,7 +153,7 @@ func (mine *TeacherService)UpdateOne(ctx context.Context, in *pb.ReqTeacherUpdat
 func (mine *TeacherService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
 	path := "teacher.removeOne"
 	inLog(path, in)
-	info := cache.Context().GetSchool(in.Parent)
+	info,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if info == nil {
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -171,9 +171,9 @@ func (mine *TeacherService)RemoveOne(ctx context.Context, in *pb.RequestInfo, ou
 func (mine *TeacherService)AddBatch(ctx context.Context, in *pb.ReqTeacherBatch, out *pb.ReplyTeacherList) error {
 	path := "teacher.addBatch"
 	inLog(path, in)
-	school := cache.Context().GetSchool(in.Owner)
+	school,_ := cache.Context().GetSchoolByUID(in.Owner)
 	if school == nil {
-		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	out.List = make([]*pb.TeacherInfo, 0, len(in.List))

@@ -46,7 +46,6 @@ func (mine *cacheContext)GetTeachersByPage(page, number uint32) (uint32, uint32,
 }
 
 func (mine *cacheContext) createTeacher(name, operator, scene, entity, user string,classes, subs []string) (*TeacherInfo,error) {
-
 	db := new(nosql.Teacher)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetTeacherNextID()

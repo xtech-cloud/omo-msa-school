@@ -167,7 +167,26 @@ func (mine *cacheContext) GetSchoolByUID(uid string) (*SchoolInfo,error) {
 			return mine.schools[i], nil
 		}
 	}
-	db,err := nosql.GetSchool(uid)
+	db,_ := nosql.GetSchool(uid)
+	if db == nil {
+		return mine.GetSchoolScene(uid)
+	}
+	school := new(SchoolInfo)
+	school.initInfo(db)
+	mine.schools = append(mine.schools, school)
+	return school,nil
+}
+
+func (mine *cacheContext) GetSchoolScene(scene string) (*SchoolInfo,error) {
+	if scene == "" {
+		return nil,errors.New("the school uid is empty")
+	}
+	for i := 0;i < len(mine.schools);i += 1 {
+		if mine.schools[i].Scene == scene {
+			return mine.schools[i],nil
+		}
+	}
+	db,err := nosql.GetSchoolByScene(scene)
 	if err != nil {
 		return nil,err
 	}
@@ -177,25 +196,13 @@ func (mine *cacheContext) GetSchoolByUID(uid string) (*SchoolInfo,error) {
 	return school,nil
 }
 
-func (mine *cacheContext) GetSchool(scene string) *SchoolInfo {
-	if scene == "" {
-		return nil
-	}
-	for i := 0;i < len(mine.schools);i += 1 {
-		if mine.schools[i].Scene == scene {
-			return mine.schools[i]
-		}
-	}
-	return nil
-}
-
-func (mine *cacheContext) GetSchoolByName(name string) *SchoolInfo {
+func (mine *cacheContext) GetSchoolByName(name string) (*SchoolInfo,error) {
 	if name == "" {
-		return nil
+		return nil,errors.New("the school uid is empty")
 	}
 	for i := 0;i < len(mine.schools);i += 1 {
 		if mine.schools[i].Name == name {
-			return mine.schools[i]
+			return mine.schools[i],nil
 		}
 	}
 	db,_ := nosql.GetSchoolByName(name)
@@ -203,9 +210,9 @@ func (mine *cacheContext) GetSchoolByName(name string) *SchoolInfo {
 		school := new(SchoolInfo)
 		school.initInfo(db)
 		mine.schools = append(mine.schools, school)
-		return school
+		return school,nil
 	}else{
-		return nil
+		return nil,errors.New("not found the school by name")
 	}
 }
 
