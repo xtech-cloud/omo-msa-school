@@ -24,10 +24,15 @@ func switchClass(info *cache.ClassInfo) *pb.ClassInfo {
 	tmp.No = uint32(info.Number)
 	tmp.Master = info.Master
 	tmp.Owner = info.School
+	tmp.Assistant = info.Assistant
 	tmp.Teachers = info.Teachers
 	tmp.Students = make([]*pb.MemberInfo, 0, len(info.Members))
 	for _, member := range info.Members {
 		tmp.Students = append(tmp.Students, &pb.MemberInfo{Uid: member.UID, Student: member.Student, Status: uint32(member.Status), Remark: member.Remark})
+	}
+	tmp.Devices = make([]*pb.DeviceInfo, 0, len(info.Devices))
+	for _, device := range info.Devices {
+		tmp.Devices = append(tmp.Devices, &pb.DeviceInfo{Uid: device.UID, Type: uint32(device.Type), Remark: device.Remark})
 	}
 	return tmp
 }
@@ -197,6 +202,30 @@ func (mine *ClassService)SetMaster(ctx context.Context, in *pb.ReqClassMaster, o
 	return nil
 }
 
+func (mine *ClassService)SetAssistant(ctx context.Context, in *pb.ReqClassMaster, out *pb.ReplyInfo) error {
+	path := "class.setAssistant"
+	inLog(path, in)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
+	if school == nil {
+		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+
+	info := school.GetClass(in.Uid)
+	if info == nil {
+		out.Status = outError(path, "not found the class", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	err := info.UpdateAssistant(in.Teacher, in.Operator)
+	if err != nil {
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
+
+	out.Status = outLog(path, out)
+	return nil
+}
+
 func (mine *ClassService)AppendStudent(ctx context.Context, in *pb.ReqClassStudent, out *pb.ReplyClassStudents) error {
 	path := "class.appendStudent"
 	inLog(path, in)
@@ -308,6 +337,60 @@ func (mine *ClassService)SubtractTeacher(ctx context.Context, in *pb.ReqClassTea
 		return nil
 	}
 	out.List = info.Teachers
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *ClassService)AppendDevice(ctx context.Context, in *pb.ReqClassDevice, out *pb.ReplyClassDevices) error {
+	path := "class.appendDevice"
+	inLog(path, in)
+	school,_ := cache.Context().GetSchoolByUID(in.School)
+	if school == nil {
+		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+
+	info := school.GetClass(in.Uid)
+	if info == nil {
+		out.Status = outError(path, "not found the class", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	err := info.BindDevice(in.Device, in.Remark, cache.DeviceType(in.Type))
+	if err != nil {
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	out.List = make([]*pb.DeviceInfo, 0, len(info.Devices))
+	for _, device := range info.Devices {
+		out.List = append(out.List, &pb.DeviceInfo{Uid: device.UID, Type: uint32(device.Type), Remark: device.Remark})
+	}
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *ClassService)SubtractDevice(ctx context.Context, in *pb.ReqClassDevice, out *pb.ReplyClassDevices) error {
+	path := "class.subtractDevice"
+	inLog(path, in)
+	school,_ := cache.Context().GetSchoolByUID(in.School)
+	if school == nil {
+		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+
+	info := school.GetClass(in.Uid)
+	if info == nil {
+		out.Status = outError(path, "not found the student class", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	err := info.UnbindDevice(in.Device)
+	if err != nil {
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	out.List = make([]*pb.DeviceInfo, 0, len(info.Devices))
+	for _, device := range info.Devices {
+		out.List = append(out.List, &pb.DeviceInfo{Uid: device.UID, Type: uint32(device.Type), Remark: device.Remark})
+	}
 	out.Status = outLog(path, out)
 	return nil
 }

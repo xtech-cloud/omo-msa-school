@@ -36,3 +36,9 @@ type ClassMember struct {
 	Status uint8 `bson:"status"`
 	Remark string `bson:"remark"`
 }
+
+type DeviceInfo struct {
+	Type uint8 `json:"type" bson:"type"`
+	UID string `json:"uid" bson:"uid"`
+	Remark string `json:"remark" bson:"remark"`
+}

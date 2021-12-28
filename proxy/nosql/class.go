@@ -21,11 +21,13 @@ type Class struct {
 	Name      string              `json:"name" bson:"name"`
 	School    string              `json:"school" bson:"school"`
 	Master    string 			  `json:"master" bson:"master"`
+	Assistant string 		  `json:"assistant" bson:"assistant"`
 	EnrolDate proxy.DateInfo      `json:"enrol" bson:"enrol"`
 	Type      uint8 			  `json:"type" bson:"type"`
 	Number    uint16              `json:"number" bson:"number"`
 	Teachers  []string 			  `json:"teachers" bson:"teachers"`
 	Students  []proxy.ClassMember `json:"students" bson:"students"`
+	Devices   []proxy.DeviceInfo `json:"devices" bson:"devices"`
 }
 
 func CreateClass(info *Class) error {
@@ -103,6 +105,12 @@ func UpdateClassMaster(uid, master, operator string) error {
 	return err
 }
 
+func UpdateClassAssistant(uid, master, operator string) error {
+	msg := bson.M{"assistant": master, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableClass, uid, msg)
+	return err
+}
+
 func RemoveClass(uid, operator string) error {
 	_, err := removeOne(TableClass, uid, operator)
 	return err
@@ -130,7 +138,7 @@ func AppendClassTeacher(uid, teacher string) error {
 	if len(uid) < 1 {
 		return errors.New("the uid is empty")
 	}
-	msg := bson.M{"students": teacher}
+	msg := bson.M{"teachers": teacher}
 	_, err := appendElement(TableClass, uid, msg)
 	return err
 }
@@ -139,7 +147,25 @@ func SubtractClassTeacher(uid, teacher string) error {
 	if len(uid) < 1 {
 		return errors.New("the uid is empty")
 	}
-	msg := bson.M{"students": teacher}
+	msg := bson.M{"teachers": teacher}
+	_, err := removeElement(TableClass, uid, msg)
+	return err
+}
+
+func AppendClassDevice(uid string, device proxy.DeviceInfo) error {
+	if len(uid) < 1 {
+		return errors.New("the uid is empty")
+	}
+	msg := bson.M{"devices": device}
+	_, err := appendElement(TableClass, uid, msg)
+	return err
+}
+
+func SubtractClassDevice(uid, device string) error {
+	if len(uid) < 1 {
+		return errors.New("the uid is empty")
+	}
+	msg := bson.M{"devices": bson.M{"uid":device}}
 	_, err := removeElement(TableClass, uid, msg)
 	return err
 }
