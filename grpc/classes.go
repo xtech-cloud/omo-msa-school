@@ -6,6 +6,7 @@ import (
 	pb "github.com/xtech-cloud/omo-msp-school/proto/school"
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.school/cache"
+	"strconv"
 )
 
 type ClassService struct {}
@@ -84,13 +85,22 @@ func (mine *ClassService)GetOne(ctx context.Context, in *pb.RequestInfo, out *pb
 func (mine *ClassService)GetList(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyClassList) error {
 	path := "class.getList"
 	inLog(path, in)
-	school,_ := cache.Context().GetSchoolByUID(in.Uid)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
 		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	var total uint32
+	var max uint32
+	var list []*cache.ClassInfo
+	var state uint64
+	if in.Filter == "status" {
+		state, _ = strconv.ParseUint(in.Value, 10, 32)
+		total, max, list = school.GetClassesByPage(0, 0, int32(state))
+	}else{
+		total, max, list = school.GetClassesByPage(0, 0, -1)
+	}
 
-	total, max, list := school.GetClassesByPage(0, 0)
 	out.List = make([]*pb.ClassInfo, 0, len(list))
 	for _, info := range list {
 		tmp := switchClass(info)

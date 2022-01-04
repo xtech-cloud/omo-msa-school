@@ -117,16 +117,22 @@ func (mine *TeacherService)GetArray(ctx context.Context, in *pb.RequestList, out
 func (mine *TeacherService)GetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyTeacherList) error {
 	path := "teacher.getByFilter"
 	inLog(path, in)
-
-	total, max, list := cache.Context().AllTeachers(in.Page, in.Number)
-	out.List = make([]*pb.TeacherInfo, 0, len(list))
-	out.Pages = max
-	for _, info := range list {
-		out.List = append(out.List, switchTeacher(info))
+	if in.Number < 10 {
+		in.Number = 10
 	}
+	out.List = make([]*pb.TeacherInfo, 0, in.Number)
+	if in.Filter == "name" {
+		info := cache.Context().GetTeacherByName(in.Value)
+		if info != nil {
+			out.List = append(out.List, switchTeacher(info))
+		}
+
+	}
+
+	out.Pages = 0
 	out.Page = in.Page
-	out.Total = total
-	out.Status = outLog(path, fmt.Sprintf("the total = %d and length = %d", total, len(out.List)))
+	out.Total = 1
+	out.Status = outLog(path, fmt.Sprintf("the total = %d and length = %d", 1, len(out.List)))
 	return nil
 }
 

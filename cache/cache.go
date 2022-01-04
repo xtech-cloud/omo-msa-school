@@ -131,6 +131,25 @@ func (mine *cacheContext) GetTeacherByUser(user string) *TeacherInfo {
 	return nil
 }
 
+func (mine *cacheContext) GetTeacherByName(user string) *TeacherInfo {
+	if user == "" {
+		return nil
+	}
+	for _, item := range mine.teachers {
+		if item.User == user {
+			return item
+		}
+	}
+	db,err := nosql.GetTeacherByUser(user)
+	if err == nil {
+		info := new(TeacherInfo)
+		info.initInfo(db)
+		mine.teachers = append(mine.teachers, info)
+		return info
+	}
+	return nil
+}
+
 func (mine *cacheContext) CheckTeacher(entity string) *SchoolInfo {
 	for _, school := range mine.schools {
 		if school.HadTeacherByEntity(entity) {

@@ -21,7 +21,7 @@ func switchSchool(info *cache.SchoolInfo) *pb.SchoolInfo {
 	tmp.Creator = info.Creator
 	tmp.Name = info.Name
 	tmp.Scene = info.Scene
-	tmp.Grade = uint32(info.MaxGrade)
+	tmp.Grade = uint32(info.MaxGrade())
 	tmp.Entity = info.Entity
 	tmp.Teachers = info.Teachers()
 	tmp.Honors = make([]*pb.HonorInfo, 0, len(info.Honors))

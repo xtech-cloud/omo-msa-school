@@ -12,7 +12,7 @@ import (
 )
 
 type SchoolInfo struct {
-	MaxGrade uint8
+	maxGrade uint8
 	Status   uint8
 	baseInfo
 	Scene    string
@@ -46,7 +46,7 @@ func (mine *SchoolInfo)initInfo(db *nosql.School) {
 		mine.classes = make([]*ClassInfo, 0, len(classes))
 		for _, item := range classes {
 			tmp := new(ClassInfo)
-			tmp.initInfo(mine.MaxGrade, item)
+			tmp.initInfo(mine.MaxGrade(), item)
 			mine.classes = append(mine.classes, tmp)
 		}
 	}else{
@@ -60,6 +60,13 @@ func (mine *SchoolInfo)initInfo(db *nosql.School) {
 			mine.teachers = append(mine.teachers, tmp)
 		}
 	}
+}
+
+func (mine *SchoolInfo)MaxGrade() uint8 {
+	if mine.maxGrade == 0 {
+		return 6
+	}
+	return mine.maxGrade
 }
 
 func (mine *SchoolInfo)UpdateInfo(name, remark, operator string) error {
@@ -80,7 +87,7 @@ func (mine *SchoolInfo)UpdateGrade(grade uint8, operator string) error {
 	if err != nil {
 		return err
 	}
-	mine.MaxGrade = grade
+	mine.maxGrade = grade
 	return nil
 }
 
@@ -806,7 +813,7 @@ func (mine *SchoolInfo) createClass(name, enrol, operator string, number,kind ui
 		return nil, err1
 	}
 	class := new(ClassInfo)
-	class.initInfo(mine.MaxGrade, db)
+	class.initInfo(mine.MaxGrade(), db)
 	mine.classes = append(mine.classes, class)
 	return class, nil
 }
@@ -843,7 +850,7 @@ func (mine *SchoolInfo)GetClassesByGrade(grade uint8) []*ClassInfo {
 func (mine *SchoolInfo)GetClasses(status ClassStatus) []*ClassInfo {
 	list := make([]*ClassInfo, 0, 50)
 	for _, item := range mine.classes {
-		if  status == ClassFinish && item.Grade() > mine.MaxGrade {
+		if  status == ClassFinish && item.Grade() > mine.MaxGrade() {
 			list = append(list, item)
 		}else{
 			list = append(list, item)
@@ -852,17 +859,24 @@ func (mine *SchoolInfo)GetClasses(status ClassStatus) []*ClassInfo {
 	return list
 }
 
-func (mine *SchoolInfo)GetClassesByPage(page, number uint32) (uint32, uint32, []*ClassInfo) {
+func (mine *SchoolInfo)GetClassesByPage(page, number uint32, st int32) (uint32, uint32, []*ClassInfo) {
 	if number < 1 {
 		number = 10
 	}
-	total := uint32(len(mine.classes))
+	var classes []*ClassInfo
+	if st > -1 {
+		classes = mine.GetClasses(ClassStatus(st))
+	}else{
+		classes = mine.classes
+	}
+
+	total := uint32(len(classes))
 	maxPage := total/ number + 1
 	if page < 1 {
-		return total, maxPage, mine.classes
+		return total, maxPage, classes
 	}
-	sort.Slice(mine.classes, func(i, j int) bool {
-		return mine.classes[i].EnrolDate.Year < mine.classes[j].EnrolDate.Year
+	sort.Slice(classes, func(i, j int) bool {
+		return classes[i].EnrolDate.Year < classes[j].EnrolDate.Year
 	})
 	//list := make([]*ClassInfo, 0, number)
 	//for i := 0;i < len(mine.classes);i += 1{

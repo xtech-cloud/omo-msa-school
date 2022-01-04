@@ -99,6 +99,16 @@ func (mine *StudentService)GetByFilter(ctx context.Context, in *pb.RequestPage, 
 		}
 		if in.Filter == "custodian" {
 			list = school.GetStudentsByCustodian(in.Value)
+		}else if in.Filter == "card" {
+			student := school.GetStudentByCard(in.Value)
+			if student != nil {
+				list = append(list, student)
+			}
+		}else if in.Filter == "entity" {
+			student := school.GetStudentByEntity(in.Value)
+			if student != nil {
+				list = append(list, student)
+			}
 		}
 	}else{
 		if in.Filter == "entity" {
@@ -142,12 +152,31 @@ func (mine *StudentService)GetArray(ctx context.Context, in *pb.RequestList, out
 	path := "student.getArray"
 	inLog(path, in)
 	out.List = make([]*pb.StudentInfo, 0, len(in.List))
-	for _, uid := range in.List {
-		info := cache.Context().GetStudent(uid)
-		if info != nil{
-			out.List = append(out.List, switchStudent(info,""))
+	if len(in.Parent) < 1 {
+		for _, uid := range in.List {
+			info := cache.Context().GetStudent(uid)
+			if info != nil{
+				out.List = append(out.List, switchStudent(info,""))
+			}
+		}
+	}else{
+		school,err := cache.Context().GetSchoolByUID(in.Parent)
+		if school == nil {
+			out.Status = outError(path,err.Error(), pbstatus.ResultStatus_NotExisted)
+			return nil
+		}
+		for _, uid := range in.List {
+			class,info := school.GetStudent(uid)
+			if info != nil{
+				if class == nil {
+					out.List = append(out.List, switchStudent(info,""))
+				}else{
+					out.List = append(out.List, switchStudent(info,class.UID))
+				}
+			}
 		}
 	}
+
 	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
 }
