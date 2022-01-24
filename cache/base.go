@@ -70,6 +70,9 @@ func checkPage( page, number uint32, all interface{}) (uint32, uint32, interface
 	if page < 1 {
 		return total, maxPage, all
 	}
+	if page > maxPage {
+		page = maxPage
+	}
 
 	var start = (page - 1) * number
 	var end = start + number

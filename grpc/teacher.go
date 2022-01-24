@@ -136,6 +136,14 @@ func (mine *TeacherService)GetByFilter(ctx context.Context, in *pb.RequestPage, 
 	return nil
 }
 
+func (mine *TeacherService)GetStatistic(ctx context.Context, in *pb.RequestPage, out *pb.ReplyStatistic) error {
+	path := "teacher.getStatistic"
+	inLog(path, in)
+
+	out.Status = outLog(path, out)
+	return nil
+}
+
 func (mine *TeacherService)UpdateOne(ctx context.Context, in *pb.ReqTeacherUpdate, out *pb.ReplyTeacherInfo) error {
 	path := "teacher.updateOne"
 	inLog(path, in)

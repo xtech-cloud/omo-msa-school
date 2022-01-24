@@ -22,6 +22,7 @@ type Student struct {
 	Name      string         `json:"name" bson:"name"`
 	Entity    string         `json:"entity" bson:"entity"`
 	EnrolDate proxy.DateInfo `json:"enrol" bson:"enrol"`
+	Status    uint8          `json:"status" bson:"status"`
 	Sex       uint8          `json:"sex" bson:"sex"`
 	//学籍号
 	SID string `json:"sid" bson:"sid"`
@@ -227,7 +228,7 @@ func GetStudentsByCustodian(school, phone string) ([]*Student, error) {
 }
 
 func UpdateStudentBase(uid, name, sn, card, sid, operator string, sex uint8, arr []proxy.CustodianInfo) error {
-	msg := bson.M{"name": name, "sn": sn, "card": card, "sid": sid, "sex":sex, "custodians": arr,
+	msg := bson.M{"name": name, "sn": sn, "card": card, "sid": sid, "sex": sex, "custodians": arr,
 		"operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableStudent, uid, msg)
 	return err
@@ -247,6 +248,18 @@ func UpdateStudentEnrol(uid, operator string, enrol proxy.DateInfo) error {
 
 func UpdateStudentEntity(uid, entity, operator string) error {
 	msg := bson.M{"entity": entity, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableStudent, uid, msg)
+	return err
+}
+
+func UpdateStudentState(uid, operator string, st uint8) error {
+	msg := bson.M{"status": st, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableStudent, uid, msg)
+	return err
+}
+
+func UpdateStudentTags(uid, operator string, tags []string) error {
+	msg := bson.M{"tags": tags, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableStudent, uid, msg)
 	return err
 }

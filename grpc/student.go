@@ -25,6 +25,7 @@ func switchStudent(info *cache.StudentInfo, class string) *pb.StudentInfo {
 	tmp.Card = info.IDCard
 	tmp.Sn = info.SN
 	tmp.Sid = info.SID
+	tmp.Status = uint32(info.Status)
 	tmp.Sex = uint32(info.Sex)
 	tmp.Class = class
 	tmp.School = info.School
@@ -109,6 +110,8 @@ func (mine *StudentService)GetByFilter(ctx context.Context, in *pb.RequestPage, 
 			if student != nil {
 				list = append(list, student)
 			}
+		}else if in.Filter == "name" {
+			list = school.GetStudentsByName(in.Value)
 		}
 	}else{
 		if in.Filter == "entity" {
@@ -178,6 +181,14 @@ func (mine *StudentService)GetArray(ctx context.Context, in *pb.RequestList, out
 	}
 
 	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
+	return nil
+}
+
+func (mine *StudentService)GetStatistic(ctx context.Context, in *pb.RequestPage, out *pb.ReplyStatistic) error {
+	path := "student.getStatistic"
+	inLog(path, in)
+
+	out.Status = outLog(path, out)
 	return nil
 }
 
@@ -302,7 +313,7 @@ func (mine *StudentService)UpdateCustodian(ctx context.Context, in *pb.ReqStuden
 }
 
 func (mine *StudentService)UpdateTags(ctx context.Context, in *pb.RequestList, out *pb.ReplyList) error {
-	path := "class.updateCustodian"
+	path := "class.tags"
 	inLog(path, in)
 	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
@@ -321,6 +332,28 @@ func (mine *StudentService)UpdateTags(ctx context.Context, in *pb.RequestList, o
 		return nil
 	}
 	out.List = info.Tags
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *StudentService)UpdateStatus(ctx context.Context, in *pb.RequestState, out *pb.ReplyInfo) error {
+	path := "class.updateCustodian"
+	inLog(path, in)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
+	if school == nil {
+		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	_,info := school.GetStudent(in.Flag)
+	if info == nil {
+		out.Status = outError(path,"not found the student by uid", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	err := info.UpdateStatus(uint8(in.State), in.Operator)
+	if err != nil {
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
 	out.Status = outLog(path, out)
 	return nil
 }

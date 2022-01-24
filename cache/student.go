@@ -19,6 +19,7 @@ type StudentStatus uint8
 
 type StudentInfo struct {
 	Sex uint8
+	Status uint8
 	baseInfo
 	Entity     string
 	SN         string //学号
@@ -46,6 +47,7 @@ func (mine *StudentInfo) initInfo(db *nosql.Student) {
 	mine.IDCard = db.IDCard
 	mine.EnrolDate = db.EnrolDate
 	mine.School = db.School
+	mine.Status = db.Status
 	mine.Custodians = db.Custodians
 	if mine.Custodians == nil {
 		mine.Custodians = make([]proxy.CustodianInfo, 0, 1)
@@ -153,8 +155,21 @@ func (mine *StudentInfo) UpdateEnrol(enrol proxy.DateInfo, operator string) erro
 }
 
 func (mine *StudentInfo) UpdateTags(tags []string, operator string) error {
+	err := nosql.UpdateStudentTags(mine.UID, operator, tags)
+	if err == nil {
+		mine.Tags = tags
+		mine.Operator = operator
+	}
+	return err
+}
 
-	return nil
+func (mine *StudentInfo) UpdateStatus(st uint8, operator string) error {
+	err := nosql.UpdateStudentState(mine.UID, operator, st)
+	if err == nil {
+		mine.Status = st
+		mine.Operator = operator
+	}
+	return err
 }
 
 func (mine *StudentInfo) BindEntity(entity, operator string) error {

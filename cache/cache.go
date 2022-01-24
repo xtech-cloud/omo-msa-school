@@ -159,7 +159,7 @@ func (mine *cacheContext) CheckTeacher(entity string) *SchoolInfo {
 	return nil
 }
 
-func (mine *cacheContext)createStudent(owner, name, sn, sid, operator string, enrol proxy.DateInfo, sex uint8, custodians []proxy.CustodianInfo) (*StudentInfo, error) {
+func (mine *cacheContext)createStudent(owner, name, sn, sid, operator string, enrol proxy.DateInfo, sex, st uint8, custodians []proxy.CustodianInfo) (*StudentInfo, error) {
 	db := new(nosql.Student)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetStudentNextID()
@@ -169,6 +169,7 @@ func (mine *cacheContext)createStudent(owner, name, sn, sid, operator string, en
 	db.Creator = operator
 	db.EnrolDate = enrol
 	db.School = owner
+	db.Status = st
 	db.Tags = make([]string, 0, 1)
 
 	db.Sex = sex

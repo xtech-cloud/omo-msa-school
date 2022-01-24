@@ -131,7 +131,7 @@ func (mine *ClassService)GetByFilter(ctx context.Context, in *pb.RequestPage, ou
 	inLog(path, in)
 	school,_ := cache.Context().GetSchoolByUID(in.Parent)
 	if school == nil {
-		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	out.List = make([]*pb.ClassInfo, 0, 3)
@@ -140,8 +140,51 @@ func (mine *ClassService)GetByFilter(ctx context.Context, in *pb.RequestPage, ou
 		if class != nil {
 			out.List = append(out.List, switchClass(class))
 		}
+	}else if in.Filter == "master" {
+		classes := school.GetClassesByMaster(in.Value)
+		for _, class := range classes {
+			out.List = append(out.List, switchClass(class))
+		}
+	}else if in.Filter == "teacher" {
+		classes := school.GetClassesByTeacher(in.Value)
+		for _, class := range classes {
+			out.List = append(out.List, switchClass(class))
+		}
+	}else if in.Filter == "assistant" {
+		classes := school.GetClassesByAssistant(in.Value)
+		for _, class := range classes {
+			out.List = append(out.List, switchClass(class))
+		}
+	}else if in.Filter == "device" {
+		var classes []*cache.ClassInfo
+		if in.Value == "" {
+			classes = school.GetBindClasses()
+		}else{
+			classes = school.GetBindClassesByDevice(in.Value)
+		}
+		for _, class := range classes {
+			out.List = append(out.List, switchClass(class))
+		}
+	}else if in.Filter == "product" {
+		st, er := strconv.ParseUint(in.Value, 10, 32)
+		if er != nil {
+			out.Status = outError(path,er.Error(), pbstatus.ResultStatus_DBException)
+			return nil
+		}
+		classes := school.GetClassesByProduct(uint8(st))
+		for _, class := range classes {
+			out.List = append(out.List, switchClass(class))
+		}
 	}
 	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
+	return nil
+}
+
+func (mine *ClassService)GetStatistic(ctx context.Context, in *pb.RequestPage, out *pb.ReplyStatistic) error {
+	path := "class.getStatistic"
+	inLog(path, in)
+
+	out.Status = outLog(path, out)
 	return nil
 }
 

@@ -91,6 +91,9 @@ func (mine *SchoolService)GetByFilter(ctx context.Context, in *pb.RequestPage, o
 	path := "school.getByFilter"
 	inLog(path, in)
 
+	if in.Filter == "entity" {
+
+	}
 	total, max, list := cache.Context().AllSchools(in.Page, in.Number)
 	out.List = make([]*pb.SchoolInfo, 0, len(list))
 	for _, info := range list {
@@ -99,6 +102,14 @@ func (mine *SchoolService)GetByFilter(ctx context.Context, in *pb.RequestPage, o
 	}
 	out.Total = total
 	out.Pages = max
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *SchoolService)GetStatistic(ctx context.Context, in *pb.RequestPage, out *pb.ReplyStatistic) error {
+	path := "school.getStatistic"
+	inLog(path, in)
+
 	out.Status = outLog(path, out)
 	return nil
 }

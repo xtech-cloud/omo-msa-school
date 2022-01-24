@@ -85,6 +85,12 @@ func (mine *ClassInfo)initInfo(grade uint8, db *nosql.Class)  {
 	if mine.Devices == nil {
 		mine.Devices = make([]proxy.DeviceInfo, 0, 2)
 	}
+	if mine.Teachers == nil {
+		mine.Teachers = make([]string, 0, 1)
+	}
+	if mine.Members == nil {
+		mine.Members = make([]proxy.ClassMember, 0, 1)
+	}
 }
 
 func (mine *ClassInfo)FullName() string {
@@ -272,6 +278,15 @@ func (mine *ClassInfo)GetStudent(uid string) *proxy.ClassMember {
 func (mine *ClassInfo)HadDevice(uid string) bool {
 	for _, device := range mine.Devices {
 		if device.UID == uid {
+			return true
+		}
+	}
+	return false
+}
+
+func (mine *ClassInfo)HadProduct(tp uint8) bool {
+	for _, device := range mine.Devices {
+		if device.Type == tp {
 			return true
 		}
 	}
