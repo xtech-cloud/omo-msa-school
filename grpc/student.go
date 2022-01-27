@@ -116,6 +116,13 @@ func (mine *StudentService)GetByFilter(ctx context.Context, in *pb.RequestPage, 
 	}else{
 		if in.Filter == "entity" {
 			list = cache.Context().GetStudentsByEntity(in.Value)
+		}else if in.Filter == "entities" {
+			for _, uid := range in.List {
+				arr := cache.Context().GetStudentsByEntity(uid)
+				if len(arr) > 0 {
+					list = append(list, arr...)
+				}
+			}
 		}else if in.Filter == "card" {
 			if in.Params == "" {
 				list = cache.Context().GetStudentsByCard(in.Value)

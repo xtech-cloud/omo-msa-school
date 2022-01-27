@@ -35,6 +35,7 @@ func (mine *TeacherInfo)initInfo(db *nosql.Teacher) {
 	mine.Histories = db.Histories
 	if mine.Histories == nil {
 		mine.Histories = make([]proxy.HistoryInfo, 0, 5)
+		_= nosql.UpdateTeacherHistories(mine.UID, mine.Operator, mine.Histories)
 	}
 }
 

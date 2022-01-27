@@ -111,6 +111,24 @@ func UpdateClassAssistant(uid, master, operator string) error {
 	return err
 }
 
+func UpdateClassDevices(uid, operator string, list []proxy.DeviceInfo) error {
+	msg := bson.M{"devices": list, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableClass, uid, msg)
+	return err
+}
+
+func UpdateClassStudents(uid, operator string, list []proxy.ClassMember) error {
+	msg := bson.M{"students": list, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableClass, uid, msg)
+	return err
+}
+
+func UpdateClassTeachers(uid, operator string, list []string) error {
+	msg := bson.M{"teachers": list, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableClass, uid, msg)
+	return err
+}
+
 func RemoveClass(uid, operator string) error {
 	_, err := removeOne(TableClass, uid, operator)
 	return err

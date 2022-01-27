@@ -21,6 +21,7 @@ func switchClass(info *cache.ClassInfo) *pb.ClassInfo {
 	tmp.Type = uint32(info.Type)
 	tmp.Operator = info.Operator
 	tmp.Creator = info.Creator
+	tmp.Grade = uint32(info.Grade())
 	tmp.Enrol = info.EnrolDate.String()
 	tmp.No = uint32(info.Number)
 	tmp.Master = info.Master

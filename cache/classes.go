@@ -50,7 +50,7 @@ func (mine *ClassInfo)Grade() uint8 {
 	now := time.Now()
 	diff := now.Year() - int(mine.EnrolDate.Year) + 1
 	if mine.EnrolDate.Month > 8 {
-		return uint8(diff)
+		return uint8(diff-1)
 	}else {
 		return uint8(diff)
 	}
@@ -84,12 +84,15 @@ func (mine *ClassInfo)initInfo(grade uint8, db *nosql.Class)  {
 	mine.Devices = db.Devices
 	if mine.Devices == nil {
 		mine.Devices = make([]proxy.DeviceInfo, 0, 2)
+		_ = nosql.UpdateClassDevices(mine.UID, mine.Operator, mine.Devices)
 	}
 	if mine.Teachers == nil {
 		mine.Teachers = make([]string, 0, 1)
+		_ = nosql.UpdateClassTeachers(mine.UID, mine.Operator, mine.Teachers)
 	}
 	if mine.Members == nil {
 		mine.Members = make([]proxy.ClassMember, 0, 1)
+		_ = nosql.UpdateClassStudents(mine.UID, mine.Operator, mine.Members)
 	}
 }
 

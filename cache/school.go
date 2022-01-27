@@ -53,6 +53,7 @@ func (mine *SchoolInfo)initInfo(db *nosql.School) {
 	mine.isInitTeachers = false
 	if mine.teacherList == nil {
 		mine.teacherList = make([]string, 0, 1)
+		_= nosql.UpdateSchoolTeachers(mine.UID, mine.Operator, mine.teacherList)
 	}
 }
 
@@ -890,6 +891,7 @@ func (mine *SchoolInfo) createClass(name, enrol, operator string, number,kind ui
 	db.Number = number
 	db.Teachers = make([]string, 0, 0)
 	db.Students = make([]proxy.ClassMember, 0, 1)
+	db.Devices = make([]proxy.DeviceInfo, 0, 1)
 	err1 := nosql.CreateClass(db)
 	if err1 != nil {
 		return nil, err1

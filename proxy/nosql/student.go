@@ -234,6 +234,12 @@ func UpdateStudentBase(uid, name, sn, card, sid, operator string, sex uint8, arr
 	return err
 }
 
+func UpdateStudentCustodians(uid, operator string, arr []proxy.CustodianInfo) error {
+	msg := bson.M{"custodians": arr, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableStudent, uid, msg)
+	return err
+}
+
 func UpdateStudentInfo(uid, name, sn, card, operator string, sex uint8) error {
 	msg := bson.M{"name": name, "sn": sn, "card": card, "sex": sex, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableStudent, uid, msg)

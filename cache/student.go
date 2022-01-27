@@ -51,6 +51,7 @@ func (mine *StudentInfo) initInfo(db *nosql.Student) {
 	mine.Custodians = db.Custodians
 	if mine.Custodians == nil {
 		mine.Custodians = make([]proxy.CustodianInfo, 0, 1)
+		_= nosql.UpdateStudentCustodians(mine.UID, mine.Operator, mine.Custodians)
 	}
 }
 

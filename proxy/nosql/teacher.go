@@ -124,6 +124,12 @@ func UpdateTeacherBase(uid, name, operator string, classes, subs []string) error
 	return err
 }
 
+func UpdateTeacherHistories(uid, operator string, list []proxy.HistoryInfo) error {
+	msg := bson.M{"operator": operator, "histories": list, "updatedAt": time.Now()}
+	_, err := updateOne(TableTeacher, uid, msg)
+	return err
+}
+
 func UpdateTeacherBase2(uid, name, operator string) error {
 	msg := bson.M{"name": name, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableTeacher, uid, msg)

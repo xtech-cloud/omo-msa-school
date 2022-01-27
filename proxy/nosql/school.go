@@ -175,6 +175,12 @@ func UpdateSchoolMaster(uid, master, operator string) error {
 	return err
 }
 
+func UpdateSchoolTeachers(uid, operator string, list []string) error {
+	msg := bson.M{"teachers": list, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableSchool, uid, msg)
+	return err
+}
+
 func UpdateSchoolCover(uid string, icon, operator string) error {
 	msg := bson.M{"cover": icon, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableSchool, uid, msg)
