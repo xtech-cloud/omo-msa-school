@@ -32,10 +32,6 @@ func switchClass(info *cache.ClassInfo) *pb.ClassInfo {
 	for _, member := range info.Members {
 		tmp.Students = append(tmp.Students, &pb.MemberInfo{Uid: member.UID, Student: member.Student, Status: uint32(member.Status), Remark: member.Remark})
 	}
-	tmp.Devices = make([]*pb.DeviceInfo, 0, len(info.Devices))
-	for _, device := range info.Devices {
-		tmp.Devices = append(tmp.Devices, &pb.DeviceInfo{Uid: device.UID, Type: uint32(device.Type), Remark: device.Remark})
-	}
 	return tmp
 }
 
@@ -130,49 +126,29 @@ func (mine *ClassService)GetArray(ctx context.Context, in *pb.RequestList, out *
 func (mine *ClassService)GetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyClassList) error {
 	path := "class.getByFilter"
 	inLog(path, in)
-	school,_ := cache.Context().GetSchoolByUID(in.Parent)
-	if school == nil {
-		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
-	out.List = make([]*pb.ClassInfo, 0, 3)
-	if in.Filter == "student" {
-		class := school.GetClassByEntity(in.Value, cache.StudentActive)
-		if class != nil {
-			out.List = append(out.List, switchClass(class))
-		}
-	}else if in.Filter == "master" {
-		classes := school.GetClassesByMaster(in.Value)
-		for _, class := range classes {
-			out.List = append(out.List, switchClass(class))
-		}
-	}else if in.Filter == "teacher" {
-		classes := school.GetClassesByTeacher(in.Value)
-		for _, class := range classes {
-			out.List = append(out.List, switchClass(class))
-		}
-	}else if in.Filter == "assistant" {
-		classes := school.GetClassesByAssistant(in.Value)
-		for _, class := range classes {
-			out.List = append(out.List, switchClass(class))
-		}
-	}else if in.Filter == "device" {
-		var classes []*cache.ClassInfo
-		if in.Value == "" {
-			classes = school.GetBindClasses()
-		}else{
-			classes = school.GetBindClassesByDevice(in.Value)
-		}
-		for _, class := range classes {
-			out.List = append(out.List, switchClass(class))
-		}
-	}else if in.Filter == "product" {
-		st, er := strconv.ParseUint(in.Value, 10, 32)
-		if er != nil {
-			out.Status = outError(path,er.Error(), pbstatus.ResultStatus_DBException)
+	if in.Parent == "" {
+
+	}else{
+		school,_ := cache.Context().GetSchoolByUID(in.Parent)
+		if school == nil {
+			out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 			return nil
 		}
-		classes := school.GetClassesByProduct(uint8(st))
+		out.List = make([]*pb.ClassInfo, 0, 3)
+		var classes []*cache.ClassInfo
+		if in.Filter == "student" {
+			class := school.GetClassByEntity(in.Value, cache.StudentActive)
+			if class != nil {
+				classes = make([]*cache.ClassInfo, 0, 1)
+				classes = append(classes, class)
+			}
+		}else if in.Filter == "master" {
+			classes = school.GetClassesByMaster(in.Value)
+		}else if in.Filter == "teacher" {
+			classes = school.GetClassesByTeacher(in.Value)
+		}else if in.Filter == "assistant" {
+			classes = school.GetClassesByAssistant(in.Value)
+		}
 		for _, class := range classes {
 			out.List = append(out.List, switchClass(class))
 		}
@@ -391,60 +367,6 @@ func (mine *ClassService)SubtractTeacher(ctx context.Context, in *pb.ReqClassTea
 		return nil
 	}
 	out.List = info.Teachers
-	out.Status = outLog(path, out)
-	return nil
-}
-
-func (mine *ClassService)AppendDevice(ctx context.Context, in *pb.ReqClassDevice, out *pb.ReplyClassDevices) error {
-	path := "class.appendDevice"
-	inLog(path, in)
-	school,_ := cache.Context().GetSchoolByUID(in.School)
-	if school == nil {
-		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
-
-	info := school.GetClass(in.Uid)
-	if info == nil {
-		out.Status = outError(path, "not found the class", pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
-	err := info.BindDevice(in.Device, in.Remark, cache.DeviceType(in.Type))
-	if err != nil {
-		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
-	out.List = make([]*pb.DeviceInfo, 0, len(info.Devices))
-	for _, device := range info.Devices {
-		out.List = append(out.List, &pb.DeviceInfo{Uid: device.UID, Type: uint32(device.Type), Remark: device.Remark})
-	}
-	out.Status = outLog(path, out)
-	return nil
-}
-
-func (mine *ClassService)SubtractDevice(ctx context.Context, in *pb.ReqClassDevice, out *pb.ReplyClassDevices) error {
-	path := "class.subtractDevice"
-	inLog(path, in)
-	school,_ := cache.Context().GetSchoolByUID(in.School)
-	if school == nil {
-		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
-
-	info := school.GetClass(in.Uid)
-	if info == nil {
-		out.Status = outError(path, "not found the student class", pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
-	err := info.UnbindDevice(in.Device)
-	if err != nil {
-		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
-	out.List = make([]*pb.DeviceInfo, 0, len(info.Devices))
-	for _, device := range info.Devices {
-		out.List = append(out.List, &pb.DeviceInfo{Uid: device.UID, Type: uint32(device.Type), Remark: device.Remark})
-	}
 	out.Status = outLog(path, out)
 	return nil
 }

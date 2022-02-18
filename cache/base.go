@@ -7,6 +7,7 @@ import (
 	"omo.msa.school/config"
 	"omo.msa.school/proxy"
 	"omo.msa.school/proxy/nosql"
+	"omo.msa.school/tool"
 	"reflect"
 	"strings"
 	"time"
@@ -43,7 +44,7 @@ func InitData() error {
 	if nil != err {
 		return err
 	}
-
+	checkSequences()
 	//num,_ := nosql.GetSchoolCount()
 	schools,_ := nosql.GetUsableSchools()
 	for _, school := range schools {
@@ -58,6 +59,37 @@ func InitData() error {
 
 func Context() *cacheContext {
 	return cacheCtx
+}
+
+func checkSequences()  {
+	arr := make([]string, 0, 6)
+	arr = append(arr, "school_"+nosql.TableApply)
+	arr = append(arr, "school_"+nosql.TableClass)
+	arr = append(arr, "school_"+nosql.TableLesson)
+	arr = append(arr, "school_"+nosql.TableStudent)
+	arr = append(arr, "school_"+nosql.TableTeacher)
+	all,_ := nosql.GetAllSequences()
+	for _, s := range all {
+		if tool.HasItem(arr, s.Name) {
+			k := strings.Replace(s.Name, "school_", "", 1)
+			_ = nosql.UpdateSequenceName(s.UID.Hex(), k)
+		}
+	}
+
+	arr2 := make([]string, 0, 6)
+	arr2 = append(arr2, nosql.TableSchool)
+	arr2 = append(arr2, nosql.TableApply)
+	arr2 = append(arr2, nosql.TableClass)
+	arr2 = append(arr2, nosql.TableLesson)
+	arr2 = append(arr2, nosql.TableStudent)
+	arr2 = append(arr2, nosql.TableTeacher)
+	arr2 = append(arr2, nosql.TableSequence)
+	all2,_ := nosql.GetAllSequences()
+	for _, s := range all2 {
+		if !tool.HasItem(arr2, s.Name) {
+			_ = nosql.DeleteSequence(s.UID.Hex())
+		}
+	}
 }
 
 func checkPage( page, number uint32, all interface{}) (uint32, uint32, interface{}) {
@@ -287,7 +319,7 @@ func (mine *cacheContext) GetSchoolByTeacher(user string) *SchoolInfo {
 		return nil
 	}
 	for i := 0;i < len(mine.schools);i += 1 {
-		if mine.schools[i].HadTeacherByUser(user) {
+		if mine.schools[i].hadTeacherByUser(user) {
 			return mine.schools[i]
 		}
 	}

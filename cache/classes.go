@@ -18,17 +18,7 @@ const (
 	ClassTypeVirtual ClassType = 1 //虚拟班
 )
 
-const (
-	DeviceTypeOther DeviceType = 0
-	DeviceTypeWall DeviceType = 1 //榜样墙（6屏）
-	DeviceTypeWide DeviceType = 2 //榜样栏（双屏）
-	DeviceTypeBoard DeviceType = 3 //班级驿站
-	DeviceTypeCard DeviceType = 4 // 班牌
-)
-
 type ClassStatus uint8
-
-type DeviceType uint8
 
 type ClassType uint8
 
@@ -43,14 +33,13 @@ type ClassInfo struct {
 	Type      ClassType
 	Members   []proxy.ClassMember
 	Teachers  []string
-	Devices   []proxy.DeviceInfo
 }
 
 func (mine *ClassInfo)Grade() uint8 {
 	now := time.Now()
-	diff := now.Year() - int(mine.EnrolDate.Year) + 1
-	if mine.EnrolDate.Month > 8 {
-		return uint8(diff-1)
+	diff := now.Year() - int(mine.EnrolDate.Year)
+	if now.Month() > time.Month(7) {
+		return uint8(diff + 1)
 	}else {
 		return uint8(diff)
 	}
@@ -81,11 +70,6 @@ func (mine *ClassInfo)initInfo(grade uint8, db *nosql.Class)  {
 	mine.Members = db.Students
 	mine.Type = ClassType(db.Type)
 	mine.Teachers = db.Teachers
-	mine.Devices = db.Devices
-	if mine.Devices == nil {
-		mine.Devices = make([]proxy.DeviceInfo, 0, 2)
-		_ = nosql.UpdateClassDevices(mine.UID, mine.Operator, mine.Devices)
-	}
 	if mine.Teachers == nil {
 		mine.Teachers = make([]string, 0, 1)
 		_ = nosql.UpdateClassTeachers(mine.UID, mine.Operator, mine.Teachers)
@@ -276,61 +260,6 @@ func (mine *ClassInfo)GetStudent(uid string) *proxy.ClassMember {
 		}
 	}
 	return nil
-}
-
-func (mine *ClassInfo)HadDevice(uid string) bool {
-	for _, device := range mine.Devices {
-		if device.UID == uid {
-			return true
-		}
-	}
-	return false
-}
-
-func (mine *ClassInfo)HadProduct(tp uint8) bool {
-	for _, device := range mine.Devices {
-		if device.Type == tp {
-			return true
-		}
-	}
-	return false
-}
-
-func (mine *ClassInfo)BindDevice(uid, remark string, tp DeviceType) error {
-	if mine.HadDevice(uid) {
-		return nil
-	}
-	info := proxy.DeviceInfo{
-		UID: uid,
-		Remark: remark,
-		Type: uint8(tp),
-	}
-	err := nosql.AppendClassDevice(mine.UID, info)
-	if err == nil {
-		mine.Devices = append(mine.Devices, info)
-	}
-	return err
-}
-
-func (mine *ClassInfo)UnbindDevice(uid string) error {
-	if !mine.HadDevice(uid) {
-		return nil
-	}
-
-	err := nosql.SubtractClassDevice(mine.UID, uid)
-	if err == nil {
-		for i:= 0;i < len(mine.Devices);i += 1 {
-			if mine.Devices[i].UID == uid {
-				if i == len(mine.Devices) - 1 {
-					mine.Devices = append(mine.Devices[:i])
-				}else{
-					mine.Devices = append(mine.Devices[:i], mine.Devices[i+1:]...)
-				}
-				break
-			}
-		}
-	}
-	return err
 }
 
 func (mine *ClassInfo)RemoveStudent(uid, remark string, id uint64, st StudentStatus) error {

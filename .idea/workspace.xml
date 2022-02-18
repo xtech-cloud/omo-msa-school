@@ -2,25 +2,35 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a05ba135-6255-4d98-bd13-c6891acdbbe0" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/cache/timetable.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/grpc/timetable.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proxy/nosql/times.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/base.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cache/classes.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/classes.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cache/school.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/school.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cache/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/student.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cache/teacher.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/teacher.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config/default.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/default.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/classes.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/classes.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grpc/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/student.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/base.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/proxy/nosql/class.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/class.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proxy/nosql/school.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/school.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proxy/nosql/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/student.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proxy/nosql/teacher.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/teacher.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/nosql/sequence.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/sequence.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/nosql/table.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/table.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
   </component>
   <component name="GOROOT" url="file://$PROJECT_DIR$/../../../../sdk/golang/go1.15.6" />
   <component name="Git.Settings">
@@ -40,6 +50,7 @@
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="DefaultGoTemplateProperty" value="Go File" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />

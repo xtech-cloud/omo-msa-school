@@ -27,7 +27,6 @@ type Class struct {
 	Number    uint16              `json:"number" bson:"number"`
 	Teachers  []string 			  `json:"teachers" bson:"teachers"`
 	Students  []proxy.ClassMember `json:"students" bson:"students"`
-	Devices   []proxy.DeviceInfo `json:"devices" bson:"devices"`
 }
 
 func CreateClass(info *Class) error {
@@ -111,12 +110,6 @@ func UpdateClassAssistant(uid, master, operator string) error {
 	return err
 }
 
-func UpdateClassDevices(uid, operator string, list []proxy.DeviceInfo) error {
-	msg := bson.M{"devices": list, "operator": operator, "updatedAt": time.Now()}
-	_, err := updateOne(TableClass, uid, msg)
-	return err
-}
-
 func UpdateClassStudents(uid, operator string, list []proxy.ClassMember) error {
 	msg := bson.M{"students": list, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableClass, uid, msg)
@@ -170,20 +163,3 @@ func SubtractClassTeacher(uid, teacher string) error {
 	return err
 }
 
-func AppendClassDevice(uid string, device proxy.DeviceInfo) error {
-	if len(uid) < 1 {
-		return errors.New("the uid is empty")
-	}
-	msg := bson.M{"devices": device}
-	_, err := appendElement(TableClass, uid, msg)
-	return err
-}
-
-func SubtractClassDevice(uid, device string) error {
-	if len(uid) < 1 {
-		return errors.New("the uid is empty")
-	}
-	msg := bson.M{"devices": bson.M{"uid":device}}
-	_, err := removeElement(TableClass, uid, msg)
-	return err
-}
