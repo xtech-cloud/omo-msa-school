@@ -13,7 +13,7 @@ const defaultJson string = `{
 	},
 	"database": {
 		"name": "schoolCloud",
-		"ip": "172.16.10.31",
+		"ip": "192.168.1.31",
 		"port": "27017",
 		"user": "root",
 		"password": "pass2019",

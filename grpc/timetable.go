@@ -41,10 +41,10 @@ func switchTimetableItem(class string, info *proxy.TimetableItem) *pb.TimetableI
 	return tmp
 }
 
-func checkTimetable(arr []*cache.TimetableInfo, school, class string, year uint32) *cache.TimetableInfo {
+func checkTimetable(arr []*cache.TimetableInfo, school, class string, year uint32) ([]*cache.TimetableInfo, *cache.TimetableInfo) {
 	for _, info := range arr {
 		if info.Class == class {
-			return info
+			return arr, info
 		}
 	}
 	tmp := new(cache.TimetableInfo)
@@ -52,7 +52,7 @@ func checkTimetable(arr []*cache.TimetableInfo, school, class string, year uint3
 	tmp.School = school
 	tmp.Year = year
 	arr = append(arr, tmp)
-	return tmp
+	return arr, tmp
 }
 
 func (mine *TimetableService)AddOne(ctx context.Context, in *pb.ReqTimetableAdd, out *pb.ReplyTimetableInfo) error {
@@ -98,17 +98,26 @@ func (mine *TimetableService)AddBatch(ctx context.Context, in *pb.ReqTimetableBa
 
 	arr := make([]*cache.TimetableInfo, 0, 50)
 	for _, item := range in.Items {
-		info := checkTimetable(arr, in.School, item.Class, in.Year)
+		ar, info := checkTimetable(arr, in.School, item.Class, in.Year)
+		arr = ar
 		info.Items = append(info.Items, proxy.TimetableItem{Weekday: time.Weekday(item.Weekday), Number: uint8(item.Number), Name: item.Name})
 	}
 	out.List = make([]*pb.TimetableInfo, 0, len(arr))
 	for _, tmp := range arr {
-		info, er := school.CreateTimetable(tmp.Class, in.Operator, in.Year, tmp.Items)
-		if er == nil {
-			out.List = append(out.List, switchTimetable(info))
+		table,_ := school.GetTimetable(tmp.Class, in.Year)
+		if table == nil {
+			info, er := school.CreateTimetable(tmp.Class, in.Operator, in.Year, tmp.Items)
+			if er == nil {
+				out.List = append(out.List, switchTimetable(info))
+			}
+		}else{
+			er := table.UpdateItems(in.Operator, tmp.Items)
+			if er == nil {
+				out.List = append(out.List, switchTimetable(table))
+			}
 		}
 	}
-	out.Status = outLog(path, out)
+	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
 }
 

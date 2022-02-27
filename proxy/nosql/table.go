@@ -11,5 +11,5 @@ const (
 	TableClass = "classes"
 	TableLesson = "lessons"
 	TableApply = "applies"
-	TableTimes = "times"
+	TableTimes = "timetables"
 )

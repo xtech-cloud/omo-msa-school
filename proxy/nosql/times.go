@@ -83,6 +83,12 @@ func GetTimetablesBy(school string, year uint32) ([]*Timetable, error) {
 	return items, nil
 }
 
+func UpdateTimetableItems(uid, operator string, list []proxy.TimetableItem) error {
+	msg := bson.M{"operator": operator, "items": list, "updatedAt": time.Now()}
+	_, err := updateOne(TableTimes, uid, msg)
+	return err
+}
+
 func RemoveTimetable(uid, operator string) error {
 	_, err := deleteOne(TableTimes, uid)
 	return err

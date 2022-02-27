@@ -34,3 +34,11 @@ func (mine *TimetableInfo)Delete() error {
 	return nosql.RemoveTimetable(mine.UID, "")
 }
 
+func (mine *TimetableInfo)UpdateItems(operator string, list []proxy.TimetableItem) error {
+	err := nosql.UpdateTimetableItems(mine.UID, operator, list)
+	if err == nil {
+		mine.Items = list
+	}
+	return err
+}
+
