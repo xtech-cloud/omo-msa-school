@@ -41,6 +41,9 @@ func (mine *ClassInfo)Grade() uint8 {
 	if now.Month() > time.Month(7) {
 		return uint8(diff + 1)
 	}else {
+		if diff < 1 {
+			return 1
+		}
 		return uint8(diff)
 	}
 }
@@ -176,6 +179,7 @@ func (mine *ClassInfo) AddStudent(info *StudentInfo) error {
 		UID: uuid,
 		Student: info.UID,
 		Status: uint8(StudentActive),
+		Updated: time.Now(),
 	}
 	err := nosql.AppendClassStudent(mine.UID, tmp)
 	if err == nil {
@@ -190,15 +194,11 @@ func (mine *ClassInfo)GetStudentsNumber() int {
 
 func (mine *ClassInfo)GetStudentsByStatus(st StudentStatus) []string {
 	list := make([]string, 0, len(mine.Members))
-	for _, student := range mine.Members {
-		if student.Status == uint8(st) {
-			info := mine.GetStudent(student.Student)
-			if info != nil {
-				list = append(list, info.Student)
-			}
+	for _, item := range mine.Members {
+		if item.Status == uint8(st) {
+			list = append(list, item.Student)
 		}
 	}
-
 	return list
 }
 
@@ -287,6 +287,7 @@ func (mine *ClassInfo)RemoveStudent(uid, remark string, id uint64, st StudentSta
 			UID: uuid,
 			Student: uid,
 			Status: uint8(st),
+			Updated: time.Now(),
 			Remark: remark,
 		}
 		err = nosql.AppendClassStudent(mine.UID, tmp)

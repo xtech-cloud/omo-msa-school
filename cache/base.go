@@ -314,12 +314,12 @@ func (mine *cacheContext) GetSchoolsByStudentEntity(entity string) ([]*SchoolInf
 	return list, classes
 }
 
-func (mine *cacheContext) GetSchoolByTeacher(user string) *SchoolInfo {
-	if user == "" {
+func (mine *cacheContext) GetSchoolByTeacher(uid string) *SchoolInfo {
+	if uid == "" {
 		return nil
 	}
 	for i := 0;i < len(mine.schools);i += 1 {
-		if mine.schools[i].hadTeacherByUser(user) {
+		if mine.schools[i].hadActTeacher(uid) {
 			return mine.schools[i]
 		}
 	}

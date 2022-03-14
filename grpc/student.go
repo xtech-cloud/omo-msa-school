@@ -44,13 +44,29 @@ func (mine *StudentService)AddOne(ctx context.Context, in *pb.ReqStudentAdd, out
 		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-
-	info, class, err1 := school.CreateStudent(in)
-	if err1 != nil {
-		out.Status = outError(path,err1.Error(), pbstatus.ResultStatus_DBException)
-		return nil
+	tmp := school.GetStudentByCard(in.Card)
+	if tmp == nil {
+		info, class, err1 := school.CreateStudent(in)
+		if err1 != nil {
+			out.Status = outError(path,err1.Error(), pbstatus.ResultStatus_DBException)
+			return nil
+		}
+		out.Info = switchStudent(info, class)
+	}else{
+		class := school.GetClassByStudent(tmp.UID, cache.StudentAll)
+		if class != nil {
+			out.Info = switchStudent(tmp, class.UID)
+		}else{
+			cla := school.GetClass(in.Class)
+			if cla != nil {
+				_ = cla.AddStudent(tmp)
+				out.Info = switchStudent(tmp, cla.UID)
+			}else{
+				out.Info = switchStudent(tmp, in.Class)
+			}
+		}
 	}
-	out.Info = switchStudent(info, class)
+
 	out.Status = outLog(path, out)
 	return nil
 }
@@ -91,7 +107,7 @@ func (mine *StudentService)GetOne(ctx context.Context, in *pb.RequestInfo, out *
 func (mine *StudentService)GetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyStudentList) error {
 	path := "student.getByFilter"
 	inLog(path, in)
-	var list []*cache.StudentInfo
+	var list = make([]*cache.StudentInfo, 0, 10)
 	if len(in.Parent) > 1 {
 		school,_ := cache.Context().GetSchoolByUID(in.Parent)
 		if school == nil {
@@ -112,6 +128,15 @@ func (mine *StudentService)GetByFilter(ctx context.Context, in *pb.RequestPage, 
 			}
 		}else if in.Filter == "name" {
 			list = school.GetStudentsByName(in.Value)
+		}else if in.Filter == "class" {
+			list = school.GetStudentsByClass(in.Value)
+		}else if in.Filter == "sn" {
+			tmp := school.GetStudentBySN(in.Value)
+			if tmp != nil {
+				list = append(list, tmp)
+			}
+		}else if in.Filter == "search" {
+			list = school.SearchStudents(in.Value)
 		}
 	}else{
 		if in.Filter == "entity" {
@@ -147,7 +172,15 @@ func (mine *StudentService)GetList(ctx context.Context, in *pb.RequestPage, out 
 		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	total, max, list := school.GetPageStudents(in.Page, in.Number)
+	var total uint32 = 0
+	var max uint32 = 0
+	var list []*cache.StudentInfo
+	if in.Filter == "entities" {
+		total, max, list = school.GetPageStudentEntities(in.Page, in.Number)
+	}else{
+		total, max, list = school.GetPageStudents(in.Page, in.Number)
+	}
+
 	out.List = make([]*pb.StudentInfo, 0, len(list))
 	for _, info := range list {
 		out.List = append(out.List, switchStudent(info,""))

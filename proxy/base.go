@@ -37,6 +37,7 @@ type ClassMember struct {
 	Student string `bson:"student"`
 	Status  uint8  `bson:"status"`
 	Remark  string `bson:"remark"`
+	Updated time.Time `bson:"updated"`
 }
 
 type DeviceInfo struct {

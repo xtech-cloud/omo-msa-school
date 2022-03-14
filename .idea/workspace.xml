@@ -3,11 +3,14 @@
   <component name="ChangeListManager">
     <list default="true" id="a05ba135-6255-4d98-bd13-c6891acdbbe0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cache/timetable.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/timetable.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/default.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/default.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grpc/timetable.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/timetable.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proxy/nosql/table.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/table.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proxy/nosql/times.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/times.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/base.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/classes.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/classes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/school.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/school.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/student.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/teacher.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/teacher.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/base.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/nosql/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/student.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,5 +114,31 @@
         <entry key="GOPROXY" value="https://mirrors.aliyun.com/goproxy" />
       </map>
     </environment>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/cache/school.go</url>
+          <line>606</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/cache/school.go</url>
+          <line>604</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/cache/school.go</url>
+          <line>620</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/cache/school.go</url>
+          <line>611</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

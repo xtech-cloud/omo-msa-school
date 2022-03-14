@@ -25,6 +25,12 @@ func switchTeacher(info *cache.TeacherInfo) *pb.TeacherInfo {
 	tmp.Classes = info.Classes
 	tmp.Subjects = info.Subjects
 	tmp.Owner = info.Owner
+	if len(tmp.Owner) < 1 {
+		school := cache.Context().GetSchoolByTeacher(info.UID)
+		if school != nil {
+			tmp.Owner = school.UID
+		}
+	}
 	tmp.Histories = make([]*pb.HistoryInfo, 0, len(info.Histories))
 	for _, history := range info.Histories {
 		tmp.Histories = append(tmp.Histories, switchHistory(&history))
@@ -126,7 +132,11 @@ func (mine *TeacherService)GetByFilter(ctx context.Context, in *pb.RequestPage, 
 		if info != nil {
 			out.List = append(out.List, switchTeacher(info))
 		}
-
+	}else if in.Filter == "user" {
+		info := cache.Context().GetTeacherByUser(in.Value)
+		if info != nil {
+			out.List = append(out.List, switchTeacher(info))
+		}
 	}
 
 	out.Pages = 0

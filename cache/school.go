@@ -293,14 +293,13 @@ func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, str
 	if err != nil {
 		return nil, "", err
 	}
+	mine.students = append(mine.students, student)
 	class := mine.GetClass(data.Class)
-	var classUID = ""
 	if class != nil {
-		classUID = class.UID
 		_ = class.AddStudent(student)
 		_ = student.UpdateEnrol(class.EnrolDate, data.Operator)
 	}
-	return student, classUID, nil
+	return student, data.Class, nil
 }
 
 func (mine *SchoolInfo) GetStudentByEntity(entity string) *StudentInfo {
@@ -308,6 +307,19 @@ func (mine *SchoolInfo) GetStudentByEntity(entity string) *StudentInfo {
 		return nil
 	}
 	db, err := nosql.GetStudentByEntity(mine.UID, entity)
+	if err == nil {
+		info := new(StudentInfo)
+		info.initInfo(db)
+		return info
+	}
+	return nil
+}
+
+func (mine *SchoolInfo) GetStudentBySN(sn string) *StudentInfo {
+	if sn == "" {
+		return nil
+	}
+	db, err := nosql.GetStudentBySN(mine.UID, sn)
 	if err == nil {
 		info := new(StudentInfo)
 		info.initInfo(db)
@@ -542,6 +554,19 @@ func (mine *SchoolInfo) AllStudents() []*StudentInfo {
 	return mine.students
 }
 
+func (mine *SchoolInfo) AllEntities() []*StudentInfo {
+	if !mine.isInitStudents {
+		mine.AllStudents()
+	}
+	list := make([]*StudentInfo, 0, len(mine.students))
+	for _, student := range mine.students {
+		if student.Entity != "" {
+			list = append(list, student)
+		}
+	}
+	return list
+}
+
 func (mine *SchoolInfo) GetStudentsByStatus(st StudentStatus) []*StudentInfo {
 	list := make([]*StudentInfo, 0, 100)
 	for _, class := range mine.classes {
@@ -560,15 +585,30 @@ func (mine *SchoolInfo) GetStudentsByStatus(st StudentStatus) []*StudentInfo {
 	return list
 }
 
+func (mine *SchoolInfo) SearchStudents(flag string) []*StudentInfo {
+	list := make([]*StudentInfo, 0, 100)
+	dbs,err := nosql.GetStudentsByKeyword(mine.UID, flag)
+	if err == nil {
+		for _, item := range dbs {
+			tmp := new(StudentInfo)
+			tmp.initInfo(item)
+			list = append(list, tmp)
+		}
+	}
+
+	return list
+}
+
 func (mine *SchoolInfo) GetStudentsByClass(uid string) []*StudentInfo {
 	list := make([]*StudentInfo, 0, 100)
+	mine.initClasses()
 	for _, class := range mine.classes {
 		if class.UID == uid {
 			array := class.GetStudentsByStatus(StudentActive)
 			if len(array) > 0 {
-				for _, uid := range array {
-					if !mine.hadStudentIn(list, uid) {
-						info := mine.getStudent(uid)
+				for _, item := range array {
+					if !mine.hadStudentIn(list, item) {
+						info := mine.getStudent(item)
 						if info != nil {
 							list = append(list, info)
 						}
@@ -608,6 +648,19 @@ func (mine *SchoolInfo) GetPageStudents(page, number uint32) (uint32, uint32, []
 		number = 10
 	}
 	all := mine.AllStudents()
+	if len(all) < 1 {
+		return 0, 0, make([]*StudentInfo, 0, 1)
+	}
+	total, maxPage, list := checkPage(page, number, all)
+
+	return total, maxPage, list.([]*StudentInfo)
+}
+
+func (mine *SchoolInfo) GetPageStudentEntities(page, number uint32) (uint32, uint32, []*StudentInfo) {
+	if number < 1 {
+		number = 10
+	}
+	all := mine.AllEntities()
 	if len(all) < 1 {
 		return 0, 0, make([]*StudentInfo, 0, 1)
 	}
@@ -745,10 +798,24 @@ func (mine *SchoolInfo) hadTeacher(uid string) bool {
 	return false
 }
 
+func (mine *SchoolInfo) hadActTeacher(uid string) bool {
+	if uid == "" {
+		return false
+	}
+	mine.AllTeachers()
+	for _, item := range mine.teachers {
+		if item.UID == uid && item.IsActive(mine.UID){
+			return true
+		}
+	}
+	return false
+}
+
 func (mine *SchoolInfo) hadTeacherByUser(uid string) bool {
 	if uid == "" {
 		return false
 	}
+	mine.AllTeachers()
 	for _, item := range mine.teachers {
 		if item.User == uid && item.IsActive(mine.UID){
 			return true
@@ -977,6 +1044,9 @@ func (mine *SchoolInfo)GetClassesByPage(page, number uint32, st int32) (uint32, 
 }
 
 func (mine *SchoolInfo)GetClass(uid string) *ClassInfo {
+	if uid == "" {
+		return nil
+	}
 	mine.initClasses()
 	for _, item := range mine.classes {
 		if item.UID == uid {
@@ -987,6 +1057,9 @@ func (mine *SchoolInfo)GetClass(uid string) *ClassInfo {
 }
 
 func (mine *SchoolInfo)GetClassByStudent(uid string, st StudentStatus) *ClassInfo {
+	if uid == "" {
+		return nil
+	}
 	mine.initClasses()
 	for _, item := range mine.classes {
 		if item.HadStudentByStatus(uid, st) {
@@ -997,6 +1070,9 @@ func (mine *SchoolInfo)GetClassByStudent(uid string, st StudentStatus) *ClassInf
 }
 
 func (mine *SchoolInfo)GetClassesByMaster(master string) []*ClassInfo {
+	if master == "" {
+		return nil
+	}
 	mine.initClasses()
 	list := make([]*ClassInfo, 0, 2)
 	for _, item := range mine.classes {
