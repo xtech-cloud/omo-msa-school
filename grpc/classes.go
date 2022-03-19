@@ -189,6 +189,26 @@ func (mine *ClassService)UpdateOne(ctx context.Context, in *pb.ReqClassUpdate, o
 	return nil
 }
 
+func (mine *ClassService)SetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyClassInfo) error {
+	path := "class.setByFilter"
+	inLog(path, in)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
+	if school == nil {
+		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+
+	info := school.GetClass(in.Uid)
+	if info == nil {
+		out.Status = outError(path, "not found the class", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+
+	out.Info = switchClass(info)
+	out.Status = outLog(path, out)
+	return nil
+}
+
 func (mine *ClassService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
 	path := "class.removeOne"
 	inLog(path, in)

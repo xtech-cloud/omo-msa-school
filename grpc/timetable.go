@@ -116,6 +116,7 @@ func (mine *TimetableService)AddBatch(ctx context.Context, in *pb.ReqTimetableBa
 				out.List = append(out.List, switchTimetable(table))
 			}
 		}
+		school.CreateSubjects(tmp.Items)
 	}
 	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil

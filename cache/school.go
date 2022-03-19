@@ -18,6 +18,7 @@ type SchoolInfo struct {
 	baseInfo
 	Scene    string
 	Cover    string
+	Support  string
 
 	Entity     string
 	Honors     []proxy.HonorInfo // 学生荣誉
@@ -42,6 +43,7 @@ func (mine *SchoolInfo)initInfo(db *nosql.School) {
 	mine.Name = db.Name
 	mine.Cover = db.Cover
 	mine.Scene = db.Scene
+	mine.Support = db.Support
 	mine.Honors = db.Honors
 	mine.Respects = db.Respects
 	mine.Subjects = db.Subjects
@@ -101,6 +103,18 @@ func (mine *SchoolInfo)UpdateGrade(grade uint8, operator string) error {
 		return err
 	}
 	mine.maxGrade = grade
+	return nil
+}
+
+func (mine *SchoolInfo)UpdateSupport(operator, support string) error {
+	if mine.Support == support {
+		return nil
+	}
+	err := nosql.UpdateSchoolSupport(mine.UID, operator, support)
+	if err != nil {
+		return err
+	}
+	mine.Support = support
 	return nil
 }
 
@@ -221,7 +235,7 @@ func (mine *SchoolInfo)GetSubject(uid string) *proxy.SubjectInfo {
 func (mine *SchoolInfo) CreateSubject(name, remark string) error {
 	for _, item := range mine.Subjects {
 		if item.Name == name {
-			return errors.New("the name had exist")
+			return nil
 		}
 	}
 	uuid := fmt.Sprintf("%s-%d", mine.UID, nosql.GetSchoolSubjectNextID())
@@ -235,6 +249,12 @@ func (mine *SchoolInfo) CreateSubject(name, remark string) error {
 		mine.Subjects = append(mine.Subjects, info)
 	}
 	return err
+}
+
+func (mine *SchoolInfo) CreateSubjects(items []proxy.TimetableItem) {
+	for _, item := range items {
+		_ = mine.CreateSubject(item.Name, item.Name)
+	}
 }
 
 func (mine *SchoolInfo) RemoveSubject(uid string) error {

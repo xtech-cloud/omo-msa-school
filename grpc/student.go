@@ -158,7 +158,12 @@ func (mine *StudentService)GetByFilter(ctx context.Context, in *pb.RequestPage, 
 	}
 	out.List = make([]*pb.StudentInfo, 0, len(list))
 	for _, info := range list {
-		out.List = append(out.List, switchStudent(info,""))
+		class := cache.Context().GetClassByStudent(info.UID)
+		cid := ""
+		if class != nil {
+			cid = class.UID
+		}
+		out.List = append(out.List, switchStudent(info,cid))
 	}
 	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
@@ -254,6 +259,26 @@ func (mine *StudentService)UpdateOne(ctx context.Context, in *pb.ReqStudentUpdat
 		out.Status = outError(path,err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
+
+	out.Info = switchStudent(info,"")
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *StudentService)SetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyStudentInfo) error {
+	path := "student.setByFilter"
+	inLog(path, in)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
+	if school == nil {
+		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	_,info := school.GetStudent(in.Uid)
+	if info == nil {
+		out.Status = outError(path,"not found the student by uid", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+
 
 	out.Info = switchStudent(info,"")
 	out.Status = outLog(path, out)

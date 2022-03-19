@@ -21,12 +21,12 @@ func (mine *cacheContext)GetClass(uid string) *ClassInfo {
 	return nil
 }
 
-func (mine *cacheContext)GetClassesByStudent(uid string) *ClassInfo {
+func (mine *cacheContext) GetClassByStudent(uid string) *ClassInfo {
 	if uid == "" {
 		return nil
 	}
 	for _, item := range mine.schools {
-		t := item.GetClass(uid)
+		t := item.GetClassByStudent(uid, StudentActive)
 		if t != nil {
 			return t
 		}

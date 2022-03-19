@@ -24,6 +24,7 @@ type School struct {
 	Cover   string          `json:"cover" bson:"cover"`
 	Scene   string          `json:"scene" bson:"scene"`
 	Entity  string          `json:"entity" bson:"entity"`
+	Support  string          `json:"support" bson:"support"`
 
 	Teachers []string `json:"teachers" bson:"teachers"`
 	Honors []proxy.HonorInfo `json:"honors" bson:"honors"`
@@ -195,6 +196,12 @@ func UpdateSchoolLocal(uid string, local, operator string) error {
 
 func UpdateSchoolGrade(uid string, grade uint8, operator string) error {
 	msg := bson.M{"grade": grade, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableSchool, uid, msg)
+	return err
+}
+
+func UpdateSchoolSupport(uid, operator, support string) error {
+	msg := bson.M{"support": support, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableSchool, uid, msg)
 	return err
 }

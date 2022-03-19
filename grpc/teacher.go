@@ -63,6 +63,12 @@ func (mine *TeacherService)AddOne(ctx context.Context, in *pb.ReqTeacherAdd, out
 		out.Status = outError(path,err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
+	for _, uid := range in.Classes {
+		class := school.GetClass(uid)
+		if class != nil {
+			_ = class.AppendTeacher(info.UID)
+		}
+	}
 	out.Info = switchTeacher(info)
 	out.Status = outLog(path, out)
 	return nil
@@ -174,6 +180,21 @@ func (mine *TeacherService)UpdateOne(ctx context.Context, in *pb.ReqTeacherUpdat
 	return nil
 }
 
+func (mine *TeacherService)SetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyTeacherInfo) error {
+	path := "teacher.setByFilter"
+	inLog(path, in)
+	info := cache.Context().GetTeacher(in.Uid)
+	if info == nil {
+		out.Status = outError(path,"not found the teacher by uid", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+
+
+	out.Info = switchTeacher(info)
+	out.Status = outLog(path, out)
+	return nil
+}
+
 func (mine *TeacherService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
 	path := "teacher.removeOne"
 	inLog(path, in)
@@ -206,6 +227,12 @@ func (mine *TeacherService)AddBatch(ctx context.Context, in *pb.ReqTeacherBatch,
 		if er == nil {
 			tmp := switchTeacher(info)
 			out.List = append(out.List, tmp)
+			for _, uid := range item.Classes {
+				class := school.GetClass(uid)
+				if class != nil {
+					_ = class.AppendTeacher(info.UID)
+				}
+			}
 		}
 	}
 

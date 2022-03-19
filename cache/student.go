@@ -2,9 +2,11 @@ package cache
 
 import (
 	"errors"
+	"fmt"
 	"omo.msa.school/proxy"
 	"omo.msa.school/proxy/nosql"
 	"omo.msa.school/tool"
+	"strings"
 )
 
 const (
@@ -119,6 +121,19 @@ func (mine *StudentInfo) UpdateBase(name, sn, card, operator string, sex uint8, 
 	}
 	if name == "" {
 		name = mine.Name
+	}
+	if !strings.Contains(sn, "-") {
+		if strings.Contains(mine.SN, "-") {
+			ar := strings.Split(mine.SN, "-")
+			if len(ar) > 2 {
+				sn = fmt.Sprintf("%s-%s-%s",ar[0], ar[1], sn)
+			}
+		}else{
+			class := cacheCtx.GetClassByStudent(mine.UID)
+			if class != nil {
+				sn = fmt.Sprintf("%d-%d-%s",class.EnrolDate.Year, class.Number, sn)
+			}
+		}
 	}
 	err = nosql.UpdateStudentBase(mine.UID, name, sn, card, sid, operator, sex, arr)
 	if err == nil {

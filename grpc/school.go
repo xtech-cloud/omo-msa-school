@@ -21,6 +21,7 @@ func switchSchool(info *cache.SchoolInfo) *pb.SchoolInfo {
 	tmp.Creator = info.Creator
 	tmp.Name = info.Name
 	tmp.Scene = info.Scene
+	tmp.Support = info.Support
 	tmp.Grade = uint32(info.MaxGrade())
 	tmp.Entity = info.Entity
 	tmp.Teachers = info.Teachers()
@@ -158,6 +159,28 @@ func (mine *SchoolService)UpdateOne(ctx context.Context, in *pb.ReqSchoolUpdate,
 		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
+	out.Info = switchSchool(school)
+	out.Status = outLog(path, out)
+	return nil
+}
+
+func (mine *SchoolService)SetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplySchoolInfo) error {
+	path := "school.setByFilter"
+	inLog(path, in)
+	school,_ := cache.Context().GetSchoolByUID(in.Parent)
+	if school == nil {
+		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	var err error
+	if in.Filter == "support" {
+		err = school.UpdateSupport(in.Operator, in.Value)
+	}
+	if err != nil {
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
+
 	out.Info = switchSchool(school)
 	out.Status = outLog(path, out)
 	return nil
