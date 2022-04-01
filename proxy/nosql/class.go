@@ -136,11 +136,11 @@ func AppendClassStudent(uid string, info proxy.ClassMember) error {
 	return err
 }
 
-func SubtractClassStudent(uid string, uuid string) error {
+func SubtractClassStudent(uid, student string) error {
 	if len(uid) < 1 {
 		return errors.New("the uid is empty")
 	}
-	msg := bson.M{"students": bson.M{"uid": uuid}}
+	msg := bson.M{"students": bson.M{"student": student}}
 	_, err := removeElement(TableClass, uid, msg)
 	return err
 }

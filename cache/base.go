@@ -271,6 +271,24 @@ func (mine *cacheContext) GetSchoolByEntity(entity string) *SchoolInfo {
 	}
 }
 
+func (mine *cacheContext) GetSchoolByClass(class string) *SchoolInfo {
+	if class == "" {
+		return nil
+	}
+	for i := 0;i < len(mine.schools);i += 1 {
+		mine.schools[i].initClasses()
+		if mine.schools[i].hadClass(class) {
+			return mine.schools[i]
+		}
+	}
+	db,_ := nosql.GetClass(class)
+	if db == nil {
+		return nil
+	}
+	tmp,_ := mine.GetSchoolByUID(db.School)
+	return tmp
+}
+
 func (mine *cacheContext) GetSchoolByStudent(student string, st StudentStatus) *SchoolInfo {
 	if student == "" {
 		return nil
@@ -319,7 +337,19 @@ func (mine *cacheContext) GetSchoolByTeacher(uid string) *SchoolInfo {
 		return nil
 	}
 	for i := 0;i < len(mine.schools);i += 1 {
-		if mine.schools[i].hadActTeacher(uid) {
+		if mine.schools[i].hadTeacher(uid) {
+			return mine.schools[i]
+		}
+	}
+	return nil
+}
+
+func (mine *cacheContext) GetSchoolByUser(uid string) *SchoolInfo {
+	if uid == "" {
+		return nil
+	}
+	for i := 0;i < len(mine.schools);i += 1 {
+		if mine.schools[i].hadTeacherByUser(uid) {
 			return mine.schools[i]
 		}
 	}

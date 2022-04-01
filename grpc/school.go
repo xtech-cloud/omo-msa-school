@@ -70,12 +70,22 @@ func (mine *SchoolService)GetOne(ctx context.Context, in *pb.RequestInfo, out *p
 	path := "school.getOne"
 	inLog(path, in)
 	var school *cache.SchoolInfo
-	if len(in.Uid) > 1 {
-		school,_ = cache.Context().GetSchoolByUID(in.Uid)
-	}else if len(in.Parent) > 1 {
-		school,_ = cache.Context().GetSchoolScene(in.Parent)
-	}else {
-		school,_ = cache.Context().GetSchoolByName(in.Operator)
+	if in.Filter == "scene" {
+		school,_ = cache.Context().GetSchoolScene(in.Value)
+	}else if in.Filter == "name" {
+		school,_ = cache.Context().GetSchoolByName(in.Value)
+	}else if in.Filter == "class" {
+		school = cache.Context().GetSchoolByClass(in.Value)
+	}else if in.Filter == "user" {
+		school = cache.Context().GetSchoolByUser(in.Value)
+	}else{
+		if len(in.Uid) > 1 {
+			school,_ = cache.Context().GetSchoolByUID(in.Uid)
+		}else if len(in.Parent) > 1 {
+			school,_ = cache.Context().GetSchoolScene(in.Parent)
+		}else {
+			school,_ = cache.Context().GetSchoolByName(in.Operator)
+		}
 	}
 
 	if school == nil {
@@ -92,10 +102,18 @@ func (mine *SchoolService)GetByFilter(ctx context.Context, in *pb.RequestPage, o
 	path := "school.getByFilter"
 	inLog(path, in)
 
-	if in.Filter == "entity" {
-
+	var total uint32 = 0
+	var max uint32 = 0
+	var list = make([]*cache.SchoolInfo, 0, 10)
+	if in.Filter == "class" {
+		info := cache.Context().GetSchoolByClass(in.Value)
+		if info != nil {
+			list = append(list, info)
+		}
+	}else{
+		total, max, list = cache.Context().AllSchools(in.Page, in.Number)
 	}
-	total, max, list := cache.Context().AllSchools(in.Page, in.Number)
+
 	out.List = make([]*pb.SchoolInfo, 0, len(list))
 	for _, info := range list {
 		tmp := switchSchool(info)
@@ -226,9 +244,18 @@ func (mine *SchoolService)AppendTeacher(ctx context.Context, in *pb.RequestInfo,
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-
+	teacher := cache.Context().GetTeacher(in.Uid)
+	if teacher == nil {
+		out.Status = outError(path,"not found the teacher", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	er := school.AppendTeacher(teacher)
+	if er != nil {
+		out.Status = outError(path,er.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
 	out.List = school.Teachers()
-	out.Status = outLog(path, out)
+	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
 }
 
@@ -241,6 +268,6 @@ func (mine *SchoolService)SubtractTeacher(ctx context.Context, in *pb.RequestInf
 		return nil
 	}
 	out.List = school.Teachers()
-	out.Status = outLog(path, out)
+	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
 }

@@ -12,7 +12,6 @@ type TeacherInfo struct {
 	baseInfo
 	Entity     string
 	User string
-	Owner string
 	Classes    []string
 	Subjects   []string
 	Tags       []string
@@ -59,11 +58,12 @@ func (mine *TeacherInfo)Remove(school, remark string) error {
 }
 
 func (mine *TeacherInfo)IsActive(school string) bool {
-	for _, history := range mine.Histories {
-		if history.School == school {
-			return false
-		}
-	}
+	//for _, history := range mine.Histories {
+	//	if history.School == school {
+	//		return false
+	//	}
+	//}
+	//return true
 	return true
 }
 

@@ -198,9 +198,6 @@ func (mine *StudentInfo) BindEntity(entity, operator string) error {
 }
 
 func (mine *StudentInfo) Remove(operator string) bool {
-	if mine.Entity != "" {
-		return false
-	}
 	er := nosql.RemoveStudent(mine.UID, operator)
 	if er == nil {
 		return true

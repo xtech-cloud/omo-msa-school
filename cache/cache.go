@@ -131,16 +131,16 @@ func (mine *cacheContext) GetTeacherByUser(user string) *TeacherInfo {
 	return nil
 }
 
-func (mine *cacheContext) GetTeacherByName(user string) *TeacherInfo {
-	if user == "" {
+func (mine *cacheContext) GetTeacherByName(name string) *TeacherInfo {
+	if name == "" {
 		return nil
 	}
 	for _, item := range mine.teachers {
-		if item.User == user {
+		if item.Name == name {
 			return item
 		}
 	}
-	db,err := nosql.GetTeacherByUser(user)
+	db,err := nosql.GetTeacherByUser(name)
 	if err == nil {
 		info := new(TeacherInfo)
 		info.initInfo(db)

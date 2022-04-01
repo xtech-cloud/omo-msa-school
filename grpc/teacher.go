@@ -24,12 +24,10 @@ func switchTeacher(info *cache.TeacherInfo) *pb.TeacherInfo {
 	tmp.Operator = info.Operator
 	tmp.Classes = info.Classes
 	tmp.Subjects = info.Subjects
-	tmp.Owner = info.Owner
-	if len(tmp.Owner) < 1 {
-		school := cache.Context().GetSchoolByTeacher(info.UID)
-		if school != nil {
-			tmp.Owner = school.UID
-		}
+	school := cache.Context().GetSchoolByTeacher(info.UID)
+	if school != nil {
+		tmp.Owner = school.UID
+		tmp.Classes = school.GetClassesUIDsByTeacher(info.UID)
 	}
 	tmp.Histories = make([]*pb.HistoryInfo, 0, len(info.Histories))
 	for _, history := range info.Histories {
@@ -58,7 +56,7 @@ func (mine *TeacherService)AddOne(ctx context.Context, in *pb.ReqTeacherAdd, out
 		return nil
 	}
 
-	info, err1 := school.CreateTeacher(in.Name, in.Entity, in.User, in.Operator)
+	info, err1 := school.CreateTeacher(in.Name, in.Entity, in.User, in.Operator, in.Classes, in.Subjects)
 	if err1 != nil {
 		out.Status = outError(path,err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -79,11 +77,27 @@ func (mine *TeacherService)GetOne(ctx context.Context, in *pb.RequestInfo, out *
 	inLog(path, in)
 	var info *cache.TeacherInfo
 	if len(in.Parent) > 1 {
-		info = cache.Context().GetTeacherByEntity(in.Parent)
-	}else if len(in.Operator) > 1 {
-		info = cache.Context().GetTeacherByUser(in.Operator)
+		school,err := cache.Context().GetSchoolByUID(in.Parent)
+		if err != nil {
+			out.Status = outError(path,err.Error(), pbstatus.ResultStatus_NotExisted)
+			return nil
+		}
+		if in.Filter == "" {
+			info = school.GetTeacher(in.Value)
+		}else if in.Filter == "entity" {
+			info = school.GetTeacherByEntity(in.Value)
+		}else if in.Filter == "user" {
+			info = school.GetTeacherByUser(in.Value)
+		}
 	}else{
-		info = cache.Context().GetTeacher(in.Uid)
+		if in.Filter == "" {
+			info = cache.Context().GetTeacher(in.Value)
+		}else if in.Filter == "entity" {
+			info = cache.Context().GetTeacherByEntity(in.Value)
+		}else if in.Filter == "user" {
+			info = cache.Context().GetTeacherByUser(in.Value)
+		}
+
 	}
 
 	if info == nil {
@@ -100,7 +114,20 @@ func (mine *TeacherService)GetList(ctx context.Context, in *pb.RequestPage, out 
 	path := "teacher.getList"
 	inLog(path, in)
 
-	total, max, list := cache.Context().AllTeachers(in.Page, in.Number)
+	var list []*cache.TeacherInfo
+	var total uint32 = 0
+	var max uint32 = 0
+	if len(in.Parent) > 1 {
+		school,err := cache.Context().GetSchoolByUID(in.Parent)
+		if err != nil {
+			out.Status = outError(path,err.Error(), pbstatus.ResultStatus_NotExisted)
+			return nil
+		}
+		total, max, list = school.GetTeachersByPage(in.Page, in.Number)
+	}else{
+		total, max, list = cache.Context().AllTeachers(in.Page, in.Number)
+	}
+
 	out.List = make([]*pb.TeacherInfo, 0, len(list))
 	out.Pages = max
 	for _, info := range list {
@@ -132,18 +159,38 @@ func (mine *TeacherService)GetByFilter(ctx context.Context, in *pb.RequestPage, 
 	if in.Number < 10 {
 		in.Number = 10
 	}
-	out.List = make([]*pb.TeacherInfo, 0, in.Number)
-	if in.Filter == "name" {
-		info := cache.Context().GetTeacherByName(in.Value)
-		if info != nil {
-			out.List = append(out.List, switchTeacher(info))
+	out.List = make([]*pb.TeacherInfo, 0, 5)
+	if len(in.Parent) > 1 {
+		school,err := cache.Context().GetSchoolByUID(in.Parent)
+		if err != nil {
+			out.Status = outError(path,err.Error(), pbstatus.ResultStatus_NotExisted)
+			return nil
 		}
-	}else if in.Filter == "user" {
-		info := cache.Context().GetTeacherByUser(in.Value)
-		if info != nil {
-			out.List = append(out.List, switchTeacher(info))
+		if in.Filter == "entity" {
+			info := school.GetTeacherByEntity(in.Value)
+			if info != nil {
+				out.List = append(out.List, switchTeacher(info))
+			}
+		}else if in.Filter == "name" {
+			list := school.GetTeachersByName(in.Value)
+			for _, info := range list {
+				out.List = append(out.List, switchTeacher(info))
+			}
+		}
+	}else{
+		if in.Filter == "name" {
+			info := cache.Context().GetTeacherByName(in.Value)
+			if info != nil {
+				out.List = append(out.List, switchTeacher(info))
+			}
+		}else if in.Filter == "user" {
+			info := cache.Context().GetTeacherByUser(in.Value)
+			if info != nil {
+				out.List = append(out.List, switchTeacher(info))
+			}
 		}
 	}
+
 
 	out.Pages = 0
 	out.Page = in.Page
@@ -203,7 +250,7 @@ func (mine *TeacherService)RemoveOne(ctx context.Context, in *pb.RequestInfo, ou
 		out.Status = outError(path,"not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	err := info.RemoveTeacherByUID(in.Uid, "")
+	err := info.RemoveTeacherByUID(in.Uid, in.Value)
 	if err != nil {
 		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -223,7 +270,7 @@ func (mine *TeacherService)AddBatch(ctx context.Context, in *pb.ReqTeacherBatch,
 	}
 	out.List = make([]*pb.TeacherInfo, 0, len(in.List))
 	for _, item := range in.List {
-		info, er := school.CreateTeacher(item.Name, item.Entity, item.User, in.Operator)
+		info, er := school.CreateTeacher(item.Name, item.Entity, item.User, in.Operator, item.Classes, item.Subjects)
 		if er == nil {
 			tmp := switchTeacher(info)
 			out.List = append(out.List, tmp)

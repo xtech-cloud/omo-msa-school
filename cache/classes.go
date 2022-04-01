@@ -263,12 +263,11 @@ func (mine *ClassInfo)GetStudent(uid string) *proxy.ClassMember {
 }
 
 func (mine *ClassInfo)RemoveStudent(uid, remark string, id uint64, st StudentStatus) error {
-	if mine.HadStudent(uid) {
+	if !mine.HadStudent(uid) {
 		return nil
 	}
-	uuid := fmt.Sprintf("%s-%d", mine.UID, id)
 	var err error
-	err = nosql.SubtractClassStudent(mine.UID, uuid)
+	err = nosql.SubtractClassStudent(mine.UID, uid)
 	if st == StudentDelete {
 		if err == nil {
 			for i:= 0;i < len(mine.Members);i += 1 {
@@ -284,7 +283,7 @@ func (mine *ClassInfo)RemoveStudent(uid, remark string, id uint64, st StudentSta
 		}
 	}else if st == StudentLeave {
 		tmp := proxy.ClassMember{
-			UID: uuid,
+			UID: fmt.Sprintf("%s-%d", mine.UID, id),
 			Student: uid,
 			Status: uint8(st),
 			Updated: time.Now(),

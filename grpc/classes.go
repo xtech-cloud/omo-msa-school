@@ -237,6 +237,11 @@ func (mine *ClassService)SetMaster(ctx context.Context, in *pb.ReqClassMaster, o
 		return nil
 	}
 
+	oClass := school.GetClassByMaster(in.Teacher)
+	if oClass != nil && oClass.UID == in.Uid {
+		out.Status = outLog(path, out)
+		return nil
+	}
 	info := school.GetClass(in.Uid)
 	if info == nil {
 		out.Status = outError(path, "not found the class", pbstatus.ResultStatus_NotExisted)
@@ -246,6 +251,9 @@ func (mine *ClassService)SetMaster(ctx context.Context, in *pb.ReqClassMaster, o
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
+	}
+	if oClass != nil {
+		_ = oClass.UpdateMaster("", in.Operator)
 	}
 
 	out.Status = outLog(path, out)
@@ -301,7 +309,7 @@ func (mine *ClassService)AppendStudent(ctx context.Context, in *pb.ReqClassStude
 		return nil
 	}
 	if oClass != nil {
-		oClass.RemoveStudent(in.Student, "change class", student.ID, cache.StudentLeave)
+		_ = oClass.RemoveStudent(in.Student, "change class", student.ID, cache.StudentLeave)
 	}
 	out.Students = make([]*pb.MemberInfo, 0, len(info.Members))
 	for _, member := range info.Members {
