@@ -76,18 +76,28 @@ func (mine *StudentService)GetOne(ctx context.Context, in *pb.RequestInfo, out *
 	inLog(path, in)
 	var classUID = ""
 	var info *cache.StudentInfo
+	var class *cache.ClassInfo
 	if len(in.Parent) > 1 {
 		school,_ := cache.Context().GetSchoolByUID(in.Parent)
 		if school == nil {
 			out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
 			return nil
 		}
-		class, st := school.GetStudent(in.Uid)
-		if st == nil {
+		if len(in.Filter) > 0 {
+			if in.Filter == "card" {
+				info = school.GetStudentByCard(in.Value)
+			} else if in.Filter == "sn" {
+				info = school.GetStudentBySN(in.Value)
+			} else if in.Filter == "entity" {
+				info = school.GetStudentByEntity(in.Value)
+			}
+		} else {
+			class, info = school.GetStudent(in.Uid)
+		}
+		if info == nil {
 			out.Status = outError(path,"not found the student", pbstatus.ResultStatus_NotExisted)
 			return nil
 		}
-		info = st
 		if class != nil {
 			classUID = class.UID
 		}

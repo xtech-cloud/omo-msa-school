@@ -55,10 +55,19 @@ func switchHonor(info proxy.HonorInfo) *pb.HonorInfo {
 func (mine *SchoolService)AddOne(ctx context.Context, in *pb.ReqSchoolAdd, out *pb.ReplySchoolInfo) error {
 	path := "school.addOne"
 	inLog(path, in)
+	if len(in.Scene) <  1{
+		out.Status = outError(path,"the scene uid is empty", pbstatus.ResultStatus_NotExisted)
+		return nil
+	}
+	var info *cache.SchoolInfo
+	var err error
+	info,_  = cache.Context().GetSchoolScene(in.Scene)
+	if info == nil {
+		info, err = cache.Context().CreateSchool(in.Name, in.Entity, in.Scene, int(in.Grade))
+	}
 
-	info, err1 := cache.Context().CreateSchool(in.Name, in.Entity, in.Scene, int(in.Grade))
-	if err1 != nil {
-		out.Status = outError(path,err1.Error(), pbstatus.ResultStatus_DBException)
+	if err != nil {
+		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Info = switchSchool(info)

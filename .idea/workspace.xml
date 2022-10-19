@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="a05ba135-6255-4d98-bd13-c6891acdbbe0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cache/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/base.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cache/cache.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/cache.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cache/classes.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/classes.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cache/school.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/school.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cache/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/student.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cache/teacher.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/teacher.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grpc/classes.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/classes.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/school.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/school.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/student.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/teacher.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/teacher.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proxy/nosql/class.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/class.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/nosql/teacher.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/teacher.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,6 +31,9 @@
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
   </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="ProjectId" id="215QloIiZRYA6r8cmWWCC6KmSmW" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -41,30 +42,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
-    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="DefaultGoTemplateProperty" value="Go File" />
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="configurable..is.expanded" value="false" />
-    <property name="configurable.GoLibrariesConfigurable.is.expanded" value="true" />
-    <property name="go.import.settings.migrated" value="true" />
-    <property name="go.sdk.automatically.set" value="true" />
-    <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="go.vgo" />
-  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "RunOnceActivity.go.watchers.conflict.with.on.save.actions.check.performed": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "go.import.settings.migrated": "true",
+    "last_opened_file_path": "C:/Users/Administrator"
+  }
+}]]></component>
   <component name="RunManager">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="omo-msa-school" />
       <working_directory value="$PROJECT_DIR$" />
       <go_parameters value="-i" />
       <kind value="FILE" />
-      <filePath value="$PROJECT_DIR$" />
       <package value="omo.msa.school" />
       <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
     <configuration name="omo-msa-school" type="GoApplicationRunConfiguration" factoryName="Go Application">
@@ -72,9 +69,9 @@
       <working_directory value="$PROJECT_DIR$" />
       <go_parameters value="-i" />
       <kind value="FILE" />
-      <filePath value="$PROJECT_DIR$/main.go" />
       <package value="omo.msa.school" />
       <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/main.go" />
       <output_directory value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
@@ -82,11 +79,11 @@
       <module name="omo-msa-school" />
       <working_directory value="$PROJECT_DIR$" />
       <go_parameters value="-i" />
-      <framework value="gotest" />
       <kind value="DIRECTORY" />
       <package value="omo.msa.school" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
       <method v="2" />
     </configuration>
   </component>
@@ -104,17 +101,16 @@
         </entry>
       </map>
     </option>
-    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="VgoProject">
-    <integration-enabled>true</integration-enabled>
     <environment>
       <map>
         <entry key="GOPROXY" value="https://mirrors.aliyun.com/goproxy" />
       </map>
     </environment>
+    <settings-migrated>true</settings-migrated>
   </component>
 </project>

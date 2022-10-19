@@ -5,10 +5,11 @@ import (
 	"omo.msa.school/proxy"
 	"omo.msa.school/proxy/nosql"
 	"omo.msa.school/tool"
+	"strings"
 	"time"
 )
 
-func (mine *cacheContext)GetClass(uid string) *ClassInfo {
+func (mine *cacheContext) GetClass(uid string) *ClassInfo {
 	if uid == "" {
 		return nil
 	}
@@ -34,7 +35,7 @@ func (mine *cacheContext) GetClassByStudent(uid string) *ClassInfo {
 	return nil
 }
 
-func (mine *cacheContext)GetTeachersByPage(page, number uint32) (uint32, uint32, []*TeacherInfo) {
+func (mine *cacheContext) GetTeachersByPage(page, number uint32) (uint32, uint32, []*TeacherInfo) {
 	if number < 1 {
 		number = 10
 	}
@@ -45,17 +46,17 @@ func (mine *cacheContext)GetTeachersByPage(page, number uint32) (uint32, uint32,
 	return total, maxPage, list.([]*TeacherInfo)
 }
 
-func (mine *cacheContext) createTeacher(name, operator, scene, entity, user string,classes, subs []string) (*TeacherInfo,error) {
+func (mine *cacheContext) createTeacher(name, operator, scene, entity, user string, classes, subs []string) (*TeacherInfo, error) {
 	db := new(nosql.Teacher)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetTeacherNextID()
 	db.CreatedTime = time.Now()
 	db.Entity = entity
-	db.Name = name
+	db.Name = strings.TrimRight(name, " ")
 	db.Classes = classes
 	db.Subjects = subs
 	db.User = user
-	db.Tags = make([]string, 0 ,1)
+	db.Tags = make([]string, 0, 1)
 	if db.Subjects == nil {
 		db.Subjects = make([]string, 0, 1)
 	}
@@ -83,7 +84,7 @@ func (mine *cacheContext) GetTeacher(uid string) *TeacherInfo {
 			return item
 		}
 	}
-	db,err := nosql.GetTeacher(uid)
+	db, err := nosql.GetTeacher(uid)
 	if err == nil {
 		info := new(TeacherInfo)
 		info.initInfo(db)
@@ -102,7 +103,26 @@ func (mine *cacheContext) GetTeacherByEntity(entity string) *TeacherInfo {
 			return item
 		}
 	}
-	db,err := nosql.GetTeacherByEntity(entity)
+	db, err := nosql.GetTeacherByEntity(entity)
+	if err == nil {
+		info := new(TeacherInfo)
+		info.initInfo(db)
+		mine.teachers = append(mine.teachers, info)
+		return info
+	}
+	return nil
+}
+
+func (mine *cacheContext) GetTeachersByEntity(entity string) *TeacherInfo {
+	if entity == "" {
+		return nil
+	}
+	for _, item := range mine.teachers {
+		if item.Entity == entity {
+			return item
+		}
+	}
+	db, err := nosql.GetTeacherByEntity(entity)
 	if err == nil {
 		info := new(TeacherInfo)
 		info.initInfo(db)
@@ -121,7 +141,7 @@ func (mine *cacheContext) GetTeacherByUser(user string) *TeacherInfo {
 			return item
 		}
 	}
-	db,err := nosql.GetTeacherByUser(user)
+	db, err := nosql.GetTeacherByUser(user)
 	if err == nil {
 		info := new(TeacherInfo)
 		info.initInfo(db)
@@ -129,6 +149,23 @@ func (mine *cacheContext) GetTeacherByUser(user string) *TeacherInfo {
 		return info
 	}
 	return nil
+}
+
+func (mine *cacheContext) GetLeaveTeachers(school string) []*TeacherInfo {
+	list := make([]*TeacherInfo, 0, 100)
+	if school == "" {
+		return list
+	}
+
+	dbs, err := nosql.GetLeaveTeachers(school)
+	if err == nil {
+		for _, db := range dbs {
+			info := new(TeacherInfo)
+			info.initInfo(db)
+			list = append(list, info)
+		}
+	}
+	return list
 }
 
 func (mine *cacheContext) GetTeacherByName(name string) *TeacherInfo {
@@ -140,7 +177,7 @@ func (mine *cacheContext) GetTeacherByName(name string) *TeacherInfo {
 			return item
 		}
 	}
-	db,err := nosql.GetTeacherByUser(name)
+	db, err := nosql.GetTeacherByUser(name)
 	if err == nil {
 		info := new(TeacherInfo)
 		info.initInfo(db)
@@ -159,13 +196,13 @@ func (mine *cacheContext) CheckTeacher(entity string) *SchoolInfo {
 	return nil
 }
 
-func (mine *cacheContext)createStudent(owner, name, sn, sid, operator string, enrol proxy.DateInfo, sex, st uint8, custodians []proxy.CustodianInfo) (*StudentInfo, error) {
+func (mine *cacheContext) createStudent(owner, name, sn, sid, operator string, enrol proxy.DateInfo, sex, st uint8, custodians []proxy.CustodianInfo) (*StudentInfo, error) {
 	db := new(nosql.Student)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetStudentNextID()
 	db.CreatedTime = time.Now()
 	db.Entity = ""
-	db.Name = name
+	db.Name = strings.TrimRight(name, " ")
 	db.Creator = operator
 	db.EnrolDate = enrol
 	db.School = owner
@@ -177,9 +214,9 @@ func (mine *cacheContext)createStudent(owner, name, sn, sid, operator string, en
 	if len(sid) == 19 {
 		db.IDCard = sid[1:]
 		db.SID = sid
-	}else if len(sid) == 18 {
+	} else if len(sid) == 18 {
 		db.IDCard = sid
-		db.SID = "G"+sid
+		db.SID = "G" + sid
 	}
 
 	if custodians != nil {
@@ -188,7 +225,7 @@ func (mine *cacheContext)createStudent(owner, name, sn, sid, operator string, en
 			if custodian.Name != "" {
 				db.Custodians = append(db.Custodians, proxy.CustodianInfo{
 					Name:     custodian.Name,
-					Phones:    custodian.Phones,
+					Phones:   custodian.Phones,
 					Identity: custodian.Identity,
 				})
 			}
@@ -291,7 +328,7 @@ func (mine *cacheContext) GetActiveStudentByEntity(uid string) (*ClassInfo, *Stu
 			}
 		}
 	}
-	return nil,nil
+	return nil, nil
 }
 
 func (mine *cacheContext) GetStudents(array []string) []*StudentInfo {
@@ -307,5 +344,3 @@ func (mine *cacheContext) GetStudents(array []string) []*StudentInfo {
 	}
 	return list
 }
-
-

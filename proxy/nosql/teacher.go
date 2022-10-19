@@ -18,12 +18,13 @@ type Teacher struct {
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Name   string `json:"name" bson:"name"`
-	Entity string `json:"entity" bson:"entity"`
-	User   string `json:"user" bson:"user"`
-	Classes []string `json:"classes" bson:"classes"`
-	Subjects []string `json:"subjects" bson:"subjects"`
-	Tags   []string `json:"tags" bson:"tags"`
+	Name      string              `json:"name" bson:"name"`
+	Remark    string              `json:"remark" bson:"remark"`
+	Entity    string              `json:"entity" bson:"entity"`
+	User      string              `json:"user" bson:"user"`
+	Classes   []string            `json:"classes" bson:"classes"`
+	Subjects  []string            `json:"subjects" bson:"subjects"`
+	Tags      []string            `json:"tags" bson:"tags"`
 	Histories []proxy.HistoryInfo `json:"histories" bson:"histories"`
 }
 
@@ -83,8 +84,27 @@ func GetTeacherByUser(user string) (*Teacher, error) {
 
 func GetTeachersBySchool(uid string) ([]*Teacher, error) {
 	var items = make([]*Teacher, 0, 100)
-	msg := bson.M{"school": uid, "deleteAt":new(time.Time)}
+	msg := bson.M{"school": uid, "deleteAt": new(time.Time)}
 	cursor, err1 := findMany(TableTeacher, msg, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		var node = new(Teacher)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
+func GetLeaveTeachers(school string) ([]*Teacher, error) {
+	var items = make([]*Teacher, 0, 100)
+	filter := bson.M{"histories": bson.M{"school": school}}
+	cursor, err1 := findMany(TableTeacher, filter, 0)
 	if err1 != nil {
 		return nil, err1
 	}
