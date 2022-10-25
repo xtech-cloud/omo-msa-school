@@ -209,9 +209,9 @@ func GetAllStudents() ([]*Student, error) {
 
 func GetStudentsByKeyword(school, key string) ([]*Student, error) {
 	def := new(time.Time)
-	regex := bson.M{"$regex":key}
+	regex := bson.M{"$regex": key}
 	filter := bson.M{"school": school, "deleteAt": def,
-		"$or": bson.A{bson.M{"name": regex}, bson.M{"sn":regex}, bson.M{"card":regex}, bson.M{"sid":regex}}}
+		"$or": bson.A{bson.M{"name": regex}, bson.M{"sn": regex}, bson.M{"card": regex}, bson.M{"sid": regex}}}
 	cursor, err1 := findMany(TableStudent, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -232,6 +232,26 @@ func GetStudentsByCustodian(school, phone string) ([]*Student, error) {
 	var items = make([]*Student, 0, 10)
 	//msg := bson.M{"school":school, "custodians.phone": phone}
 	msg := bson.M{"school": school, "custodians": bson.M{"$elemMatch": bson.M{"phones": bson.M{"$elemMatch": bson.M{"$eq": phone}}}}}
+	cursor, err1 := findMany(TableStudent, msg, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		var node = new(Student)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
+func GetStudentsByEnrol(school, enrol string) ([]*Student, error) {
+	var items = make([]*Student, 0, 10)
+	//msg := bson.M{"school":school, "custodians.phone": phone}
+	msg := bson.M{"school": school, "enrol": bson.M{"$elemMatch": bson.M{"name": bson.M{"$elemMatch": bson.M{"$eq": enrol}}}}}
 	cursor, err1 := findMany(TableStudent, msg, 0)
 	if err1 != nil {
 		return nil, err1

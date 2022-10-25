@@ -16,24 +16,24 @@ type SchoolInfo struct {
 	maxGrade uint8
 	Status   uint8
 	baseInfo
-	Scene    string
-	Cover    string
-	Support  string
+	Scene   string
+	Cover   string
+	Support string
 
-	Entity     string
-	Honors     []proxy.HonorInfo // 学生荣誉
-	Respects   []proxy.HonorInfo // 教师荣誉
-	Subjects   []proxy.SubjectInfo
-	teacherList   []string
-	classes    []*ClassInfo
+	Entity      string
+	Honors      []proxy.HonorInfo // 学生荣誉
+	Respects    []proxy.HonorInfo // 教师荣誉
+	Subjects    []proxy.SubjectInfo
+	teacherList []string
+	classes     []*ClassInfo
 	//teachers   []*TeacherInfo
-	students   []*StudentInfo
-	isInitClasses bool
+	students       []*StudentInfo
+	isInitClasses  bool
 	isInitStudents bool
 	//isInitTeachers bool
 }
 
-func (mine *SchoolInfo)initInfo(db *nosql.School) {
+func (mine *SchoolInfo) initInfo(db *nosql.School) {
 	mine.UID = db.UID.Hex()
 	mine.ID = db.ID
 	mine.UpdateTime = db.UpdatedTime
@@ -55,15 +55,15 @@ func (mine *SchoolInfo)initInfo(db *nosql.School) {
 	//mine.isInitTeachers = false
 	if mine.teacherList == nil {
 		mine.teacherList = make([]string, 0, 1)
-		_= nosql.UpdateSchoolTeachers(mine.UID, mine.Operator, mine.teacherList)
+		_ = nosql.UpdateSchoolTeachers(mine.UID, mine.Operator, mine.teacherList)
 	}
 }
 
-func (mine *SchoolInfo) initClasses()  {
+func (mine *SchoolInfo) initClasses() {
 	if mine.isInitClasses {
 		return
 	}
-	classes,err := nosql.GetClassesBySchool(mine.UID)
+	classes, err := nosql.GetClassesBySchool(mine.UID)
 	if err == nil {
 		mine.classes = make([]*ClassInfo, 0, len(classes))
 		for _, item := range classes {
@@ -71,20 +71,20 @@ func (mine *SchoolInfo) initClasses()  {
 			tmp.initInfo(mine.MaxGrade(), item)
 			mine.classes = append(mine.classes, tmp)
 		}
-	}else{
+	} else {
 		mine.classes = make([]*ClassInfo, 0, 1)
 	}
 	mine.isInitClasses = true
 }
 
-func (mine *SchoolInfo)MaxGrade() uint8 {
+func (mine *SchoolInfo) MaxGrade() uint8 {
 	if mine.maxGrade < 6 {
 		mine.maxGrade = 6
 	}
 	return mine.maxGrade
 }
 
-func (mine *SchoolInfo)UpdateInfo(name, remark, operator string) error {
+func (mine *SchoolInfo) UpdateInfo(name, remark, operator string) error {
 	err1 := nosql.UpdateSchoolBase(mine.UID, name, remark, operator)
 	if err1 != nil {
 		return err1
@@ -94,7 +94,7 @@ func (mine *SchoolInfo)UpdateInfo(name, remark, operator string) error {
 	return nil
 }
 
-func (mine *SchoolInfo)UpdateGrade(grade uint8, operator string) error {
+func (mine *SchoolInfo) UpdateGrade(grade uint8, operator string) error {
 	if grade < 6 {
 		grade = 6
 	}
@@ -106,7 +106,7 @@ func (mine *SchoolInfo)UpdateGrade(grade uint8, operator string) error {
 	return nil
 }
 
-func (mine *SchoolInfo)UpdateSupport(operator, support string) error {
+func (mine *SchoolInfo) UpdateSupport(operator, support string) error {
 	if mine.Support == support {
 		return nil
 	}
@@ -118,7 +118,7 @@ func (mine *SchoolInfo)UpdateSupport(operator, support string) error {
 	return nil
 }
 
-func (mine *SchoolInfo)UpdateStatus(st uint8, operator string) error {
+func (mine *SchoolInfo) UpdateStatus(st uint8, operator string) error {
 	err := nosql.UpdateSchoolStatus(mine.UID, operator, st)
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func (mine *SchoolInfo)UpdateStatus(st uint8, operator string) error {
 	return nil
 }
 
-func (mine *SchoolInfo)IsCustodian(phone string) bool {
+func (mine *SchoolInfo) IsCustodian(phone string) bool {
 	for _, info := range mine.AllStudents() {
 		if info.HadCustodian(phone) {
 			return true
@@ -144,8 +144,8 @@ func (mine *SchoolInfo) CreateStudentHonor(name, remark, parent string) error {
 	}
 	uuid := fmt.Sprintf("%s-%s%d", mine.UID, "s", nosql.GetSchoolHonorNextID())
 	honor := proxy.HonorInfo{
-		UID: uuid,
-		Name: name,
+		UID:    uuid,
+		Name:   name,
 		Remark: remark,
 		Parent: parent,
 	}
@@ -156,14 +156,14 @@ func (mine *SchoolInfo) CreateStudentHonor(name, remark, parent string) error {
 	return err
 }
 
-func (mine *SchoolInfo)GetHonor(student bool, uid string) *proxy.HonorInfo {
+func (mine *SchoolInfo) GetHonor(student bool, uid string) *proxy.HonorInfo {
 	if student {
 		for _, honor := range mine.Honors {
 			if honor.UID == uid {
 				return &honor
 			}
 		}
-	}else{
+	} else {
 		for _, honor := range mine.Respects {
 			if honor.UID == uid {
 				return &honor
@@ -181,8 +181,8 @@ func (mine *SchoolInfo) CreateTeacherHonor(name, remark, parent string) error {
 	}
 	uuid := fmt.Sprintf("%s-%s%d", mine.UID, "t", nosql.GetSchoolHonorNextID())
 	honor := proxy.HonorInfo{
-		UID: uuid,
-		Name: name,
+		UID:    uuid,
+		Name:   name,
 		Remark: remark,
 		Parent: parent,
 	}
@@ -198,21 +198,21 @@ func (mine *SchoolInfo) RemoveHonor(uid string, kind pb.TargetType) error {
 	if kind == pb.TargetType_TStudent {
 		err = nosql.SubtractSchoolHonor(mine.UID, uid)
 		if err == nil {
-			for i := 0;i < len(mine.Honors);i += 1 {
+			for i := 0; i < len(mine.Honors); i += 1 {
 				if mine.Honors[i].UID == uid {
-					if i == len(mine.Honors) - 1{
+					if i == len(mine.Honors)-1 {
 						mine.Honors = append(mine.Honors[:i])
-					}else{
+					} else {
 						mine.Honors = append(mine.Honors[:i], mine.Honors[i+1:]...)
 					}
 					break
 				}
 			}
 		}
-	}else{
+	} else {
 		err = nosql.SubtractSchoolRespect(mine.UID, uid)
 		if err == nil {
-			for i := 0;i < len(mine.Respects);i += 1 {
+			for i := 0; i < len(mine.Respects); i += 1 {
 				if mine.Respects[i].UID == uid {
 					mine.Respects = append(mine.Respects[:i], mine.Respects[i+1:]...)
 					break
@@ -223,7 +223,7 @@ func (mine *SchoolInfo) RemoveHonor(uid string, kind pb.TargetType) error {
 	return err
 }
 
-func (mine *SchoolInfo)GetSubject(uid string) *proxy.SubjectInfo {
+func (mine *SchoolInfo) GetSubject(uid string) *proxy.SubjectInfo {
 	for _, item := range mine.Subjects {
 		if item.UID == uid {
 			return &item
@@ -240,8 +240,8 @@ func (mine *SchoolInfo) CreateSubject(name, remark string) error {
 	}
 	uuid := fmt.Sprintf("%s-%d", mine.UID, nosql.GetSchoolSubjectNextID())
 	info := proxy.SubjectInfo{
-		UID: uuid,
-		Name: name,
+		UID:    uuid,
+		Name:   name,
 		Remark: remark,
 	}
 	err := nosql.AppendSchoolSubject(mine.UID, info)
@@ -261,7 +261,7 @@ func (mine *SchoolInfo) RemoveSubject(uid string) error {
 	var err error
 	err = nosql.SubtractSchoolSubject(mine.UID, uid)
 	if err == nil {
-		for i := 0;i < len(mine.Subjects);i += 1 {
+		for i := 0; i < len(mine.Subjects); i += 1 {
 			if mine.Subjects[i].UID == uid {
 				mine.Subjects = append(mine.Subjects[:i], mine.Subjects[i+1:]...)
 				break
@@ -276,9 +276,9 @@ func (mine *SchoolInfo) GetGradeStudents() []*PairIntInfo {
 	list := make([]*PairIntInfo, 0, 6)
 	for i := 0; i < 6; i += 1 {
 		pair := new(PairIntInfo)
-		pair.Key = uint32(i+1)
+		pair.Key = uint32(i + 1)
 		num := 0
-		classes := mine.GetClassesByGrade(uint8(i+1))
+		classes := mine.GetClassesByGrade(uint8(i + 1))
 		for _, class := range classes {
 			num = num + class.GetStudentsNumber()
 		}
@@ -298,18 +298,19 @@ func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, str
 			if custodian.Name != "" {
 				list = append(list, proxy.CustodianInfo{
 					Name:     custodian.Name,
-					Phones:    custodian.Phones,
+					Phones:   custodian.Phones,
 					Identity: custodian.Identify,
 				})
 			}
 		}
 	}
 	date := proxy.DateInfo{
+		Name:  fmt.Sprintf("%d-%d-%d", time.Now().Year(), time.January, 1),
 		Year:  0,
 		Month: time.January,
 		Day:   1,
 	}
-	student,err := cacheCtx.createStudent(mine.UID, data.Name, data.Sn, data.Card, data.Operator, date, uint8(data.Sex), uint8(data.Status), list)
+	student, err := cacheCtx.createStudent(mine.UID, data.Name, data.Sn, data.Card, data.Operator, date, uint8(data.Sex), uint8(data.Status), list)
 	if err != nil {
 		return nil, "", err
 	}
@@ -369,7 +370,24 @@ func (mine *SchoolInfo) GetStudentsByCustodian(phone string) []*StudentInfo {
 	if phone == "" {
 		return list
 	}
-	array,err := nosql.GetStudentsByCustodian(mine.UID, phone)
+	array, err := nosql.GetStudentsByCustodian(mine.UID, phone)
+	if err != nil {
+		return list
+	}
+	for _, student := range array {
+		info := new(StudentInfo)
+		info.initInfo(student)
+		list = append(list, info)
+	}
+	return list
+}
+
+func (mine *SchoolInfo) GetStudentsByEnrol(enrol string) []*StudentInfo {
+	list := make([]*StudentInfo, 0, 2)
+	if enrol == "" {
+		return list
+	}
+	array, err := nosql.GetStudentsByEnrol(mine.UID, enrol)
 	if err != nil {
 		return list
 	}
@@ -410,8 +428,8 @@ func (mine *SchoolInfo) CreateSimpleStudent(name, entity, sn, card, operator str
 	if len(card) == 19 {
 		db.IDCard = card[1:]
 		db.SID = card
-	}else if len(card) == 18 {
-		db.SID = "G"+card
+	} else if len(card) == 18 {
+		db.SID = "G" + card
 		db.IDCard = card
 	}
 
@@ -427,6 +445,7 @@ func (mine *SchoolInfo) CreateSimpleStudent(name, entity, sn, card, operator str
 	mine.students = append(mine.students, student)
 	return student, nil
 }
+
 //
 //func (mine *SchoolInfo) createStudent(operator string, data *StudentTemp) (*StudentInfo, error) {
 //	list := make([]proxy.CustodianInfo, 0, 1)
@@ -446,7 +465,7 @@ func (mine *SchoolInfo) CreateSimpleStudent(name, entity, sn, card, operator str
 //	return student, nil
 //}
 
-func (mine *SchoolInfo) appendStudent(student *StudentInfo, operator string, grade uint8, num,kind uint16) {
+func (mine *SchoolInfo) appendStudent(student *StudentInfo, operator string, grade uint8, num, kind uint16) {
 	if student == nil {
 		return
 	}
@@ -478,16 +497,16 @@ func (mine *SchoolInfo) RemoveStudent(uid, operator string) error {
 	if uid == "" {
 		return errors.New("the student uid is empty")
 	}
-	class,info := mine.GetStudent(uid)
+	class, info := mine.GetStudent(uid)
 	if info == nil {
 		return errors.New("not found the student")
 	}
 	if info.Remove(operator) {
-		for i:= 0;i < len(mine.students);i += 1 {
+		for i := 0; i < len(mine.students); i += 1 {
 			if mine.students[i].UID == uid {
-				if i == len(mine.students) - 1 {
+				if i == len(mine.students)-1 {
 					mine.students = append(mine.students[:i])
-				}else{
+				} else {
 					mine.students = append(mine.students[:i], mine.students[i+1:]...)
 				}
 				break
@@ -564,7 +583,7 @@ func (mine *SchoolInfo) AllStudents() []*StudentInfo {
 			list = append(list, info)
 		}
 		mine.students = list
-	}else{
+	} else {
 		mine.students = make([]*StudentInfo, 0, 1)
 	}
 	mine.isInitStudents = true
@@ -608,7 +627,7 @@ func (mine *SchoolInfo) GetStudentsByStatus(st StudentStatus) []*StudentInfo {
 
 func (mine *SchoolInfo) SearchStudents(flag string) []*StudentInfo {
 	list := make([]*StudentInfo, 0, 100)
-	dbs,err := nosql.GetStudentsByKeyword(mine.UID, flag)
+	dbs, err := nosql.GetStudentsByKeyword(mine.UID, flag)
 	if err == nil {
 		for _, item := range dbs {
 			tmp := new(StudentInfo)
@@ -642,7 +661,7 @@ func (mine *SchoolInfo) GetStudentsByClass(uid string) []*StudentInfo {
 	return list
 }
 
-func (mine *SchoolInfo)hadStudentIn(list []*StudentInfo, uid string) bool {
+func (mine *SchoolInfo) hadStudentIn(list []*StudentInfo, uid string) bool {
 	for _, info := range list {
 		if info.UID == uid {
 			return true
@@ -690,7 +709,7 @@ func (mine *SchoolInfo) GetPageStudentEntities(page, number uint32) (uint32, uin
 	return total, maxPage, list.([]*StudentInfo)
 }
 
-func (mine *SchoolInfo)GetActiveStudents(page, number uint32) (uint32, uint32, []*StudentInfo) {
+func (mine *SchoolInfo) GetActiveStudents(page, number uint32) (uint32, uint32, []*StudentInfo) {
 	if number < 1 {
 		number = 10
 	}
@@ -702,10 +721,11 @@ func (mine *SchoolInfo)GetActiveStudents(page, number uint32) (uint32, uint32, [
 
 	return total, maxPage, list.([]*StudentInfo)
 }
+
 //endregion
 
 //region Teacher Fun
-func (mine *SchoolInfo)AllTeachers() []*TeacherInfo {
+func (mine *SchoolInfo) AllTeachers() []*TeacherInfo {
 	teachers := make([]*TeacherInfo, 0, len(mine.teacherList))
 	for _, item := range mine.teacherList {
 		tmp := Context().GetTeacher(item)
@@ -716,7 +736,7 @@ func (mine *SchoolInfo)AllTeachers() []*TeacherInfo {
 	return teachers
 }
 
-func (mine *SchoolInfo)Teachers() []string {
+func (mine *SchoolInfo) Teachers() []string {
 	return mine.teacherList
 }
 
@@ -804,7 +824,7 @@ func (mine *SchoolInfo) hadTeacher(uid string) bool {
 		return false
 	}
 	for _, item := range mine.teacherList {
-		if item == uid{
+		if item == uid {
 			return true
 		}
 	}
@@ -839,17 +859,17 @@ func (mine *SchoolInfo) hadTeacherByUser(uid string) bool {
 
 func (mine *SchoolInfo) CreateTeacher(name, entity, user, operator string, classes, subs []string) (*TeacherInfo, error) {
 	if mine.hadTeacherByUser(user) {
-		return mine.GetTeacherByUser(user),nil
+		return mine.GetTeacherByUser(user), nil
 	}
-	teacher, err := Context().createTeacher(name, operator, mine.Scene, entity, user,classes, subs)
+	teacher, err := Context().createTeacher(name, operator, mine.Scene, entity, user, classes, subs)
 	if err != nil {
 		return nil, err
 	}
 	mine.AppendTeacher(teacher)
-	return teacher,nil
+	return teacher, nil
 }
 
-func (mine *SchoolInfo)AppendTeacher(info *TeacherInfo) error {
+func (mine *SchoolInfo) AppendTeacher(info *TeacherInfo) error {
 	if mine.hadTeacher(info.UID) {
 		return nil
 	}
@@ -860,7 +880,7 @@ func (mine *SchoolInfo)AppendTeacher(info *TeacherInfo) error {
 	return err
 }
 
-func (mine *SchoolInfo)HadTeacherByEntity(entity string) bool {
+func (mine *SchoolInfo) HadTeacherByEntity(entity string) bool {
 	teachers := mine.AllTeachers()
 	for _, teacher := range teachers {
 		if teacher.Entity == entity {
@@ -870,7 +890,7 @@ func (mine *SchoolInfo)HadTeacherByEntity(entity string) bool {
 	return false
 }
 
-func (mine *SchoolInfo)GetTeachersByPage(page, number uint32) (uint32, uint32, []*TeacherInfo) {
+func (mine *SchoolInfo) GetTeachersByPage(page, number uint32) (uint32, uint32, []*TeacherInfo) {
 	if number < 1 {
 		number = 10
 	}
@@ -882,26 +902,26 @@ func (mine *SchoolInfo)GetTeachersByPage(page, number uint32) (uint32, uint32, [
 	return total, maxPage, list.([]*TeacherInfo)
 }
 
-func (mine *SchoolInfo)RemoveTeacher(entity, remark string) error {
+func (mine *SchoolInfo) RemoveTeacher(entity, remark string) error {
 	mine.AllTeachers()
 	info := mine.GetTeacherByEntity(entity)
 	if info == nil {
 		return errors.New("not found the teacher")
 	}
 	_ = info.Remove(mine.UID, remark)
-	err :=  nosql.SubtractSchoolTeacher(mine.UID, info.UID)
-	if err == nil{
+	err := nosql.SubtractSchoolTeacher(mine.UID, info.UID)
+	if err == nil {
 		mine.removeTeacherUID(info.UID)
 	}
 	return err
 }
 
-func (mine *SchoolInfo)removeTeacherUID(uid string)  {
-	for i:= 0;i < len(mine.teacherList);i += 1 {
+func (mine *SchoolInfo) removeTeacherUID(uid string) {
+	for i := 0; i < len(mine.teacherList); i += 1 {
 		if mine.teacherList[i] == uid {
-			if i == len(mine.teacherList) - 1 {
+			if i == len(mine.teacherList)-1 {
 				mine.teacherList = append(mine.teacherList[:i])
-			}else{
+			} else {
 				mine.teacherList = append(mine.teacherList[:i], mine.teacherList[i+1:]...)
 			}
 			break
@@ -909,23 +929,24 @@ func (mine *SchoolInfo)removeTeacherUID(uid string)  {
 	}
 }
 
-func (mine *SchoolInfo)RemoveTeacherByUID(uid, remark string) error {
+func (mine *SchoolInfo) RemoveTeacherByUID(uid, remark string) error {
 	mine.AllTeachers()
 	info := mine.GetTeacher(uid)
 	if info == nil {
 		return errors.New("not found the teacher")
 	}
 	_ = info.Remove(mine.UID, remark)
-	err :=  nosql.SubtractSchoolTeacher(mine.UID, info.UID)
-	if err == nil{
+	err := nosql.SubtractSchoolTeacher(mine.UID, info.UID)
+	if err == nil {
 		mine.removeTeacherUID(uid)
 	}
 	return err
 }
+
 //endregion
 
 //region Class Fun
-func (mine *SchoolInfo)CreateClasses(name, enrol, operator string, number, kind uint16) ([]*ClassInfo, error) {
+func (mine *SchoolInfo) CreateClasses(name, enrol, operator string, number, kind uint16) ([]*ClassInfo, error) {
 	mine.initClasses()
 	if number < 1 {
 		return nil, errors.New("the number must not more than 0")
@@ -948,16 +969,16 @@ func (mine *SchoolInfo)CreateClasses(name, enrol, operator string, number, kind 
 		}
 		length = diff
 	}
-	for i := 0;i < length;i += 1 {
-		info,_ := mine.createClass(name, enrol, operator, uint16(i + count + 1), kind)
+	for i := 0; i < length; i += 1 {
+		info, _ := mine.createClass(name, enrol, operator, uint16(i+count+1), kind)
 		if info != nil {
 			array = append(array, info)
 		}
 	}
-	return array,nil
+	return array, nil
 }
 
-func (mine *SchoolInfo) createClass(name, enrol, operator string, number,kind uint16) (*ClassInfo, error) {
+func (mine *SchoolInfo) createClass(name, enrol, operator string, number, kind uint16) (*ClassInfo, error) {
 	db := new(nosql.Class)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetClassNextID()
@@ -998,42 +1019,42 @@ func (mine *SchoolInfo) hadClass(uid string) bool {
 	return false
 }
 
-func (mine *SchoolInfo)GetClassesByEnrol(year uint16, month time.Month) []*ClassInfo {
+func (mine *SchoolInfo) GetClassesByEnrol(year uint16, month time.Month) []*ClassInfo {
 	mine.initClasses()
 	list := make([]*ClassInfo, 0, 10)
 	for _, item := range mine.classes {
-		if  item.EnrolDate.Year == year && item.EnrolDate.Month == month {
+		if item.EnrolDate.Year == year && item.EnrolDate.Month == month {
 			list = append(list, item)
 		}
 	}
 	return list
 }
 
-func (mine *SchoolInfo)GetClassesByGrade(grade uint8) []*ClassInfo {
+func (mine *SchoolInfo) GetClassesByGrade(grade uint8) []*ClassInfo {
 	mine.initClasses()
 	list := make([]*ClassInfo, 0, 10)
 	for _, item := range mine.classes {
-		if  item.Grade() == grade {
+		if item.Grade() == grade {
 			list = append(list, item)
 		}
 	}
 	return list
 }
 
-func (mine *SchoolInfo)GetClasses(status ClassStatus) []*ClassInfo {
+func (mine *SchoolInfo) GetClasses(status ClassStatus) []*ClassInfo {
 	mine.initClasses()
 	list := make([]*ClassInfo, 0, 50)
 	for _, item := range mine.classes {
-		if  status == ClassFinish && item.Grade() > mine.MaxGrade() {
+		if status == ClassFinish && item.Grade() > mine.MaxGrade() {
 			list = append(list, item)
-		}else{
+		} else {
 			list = append(list, item)
 		}
 	}
 	return list
 }
 
-func (mine *SchoolInfo)GetClassesByPage(page, number uint32, st int32) (uint32, uint32, []*ClassInfo) {
+func (mine *SchoolInfo) GetClassesByPage(page, number uint32, st int32) (uint32, uint32, []*ClassInfo) {
 	mine.initClasses()
 	if number < 1 {
 		number = 10
@@ -1041,12 +1062,12 @@ func (mine *SchoolInfo)GetClassesByPage(page, number uint32, st int32) (uint32, 
 	var classes []*ClassInfo
 	if st > -1 {
 		classes = mine.GetClasses(ClassStatus(st))
-	}else{
+	} else {
 		classes = mine.classes
 	}
 
 	total := uint32(len(classes))
-	maxPage := total/ number + 1
+	maxPage := total/number + 1
 	if page < 1 {
 		return total, maxPage, classes
 	}
@@ -1061,10 +1082,10 @@ func (mine *SchoolInfo)GetClassesByPage(page, number uint32, st int32) (uint32, 
 	//	}
 	//}
 	total, max, list := checkPage(page, number, mine.classes)
-	return total, max ,list.([]*ClassInfo)
+	return total, max, list.([]*ClassInfo)
 }
 
-func (mine *SchoolInfo)GetClass(uid string) *ClassInfo {
+func (mine *SchoolInfo) GetClass(uid string) *ClassInfo {
 	if uid == "" {
 		return nil
 	}
@@ -1077,7 +1098,7 @@ func (mine *SchoolInfo)GetClass(uid string) *ClassInfo {
 	return nil
 }
 
-func (mine *SchoolInfo)GetClassByMaster(teacher string) *ClassInfo {
+func (mine *SchoolInfo) GetClassByMaster(teacher string) *ClassInfo {
 	if teacher == "" {
 		return nil
 	}
@@ -1090,7 +1111,7 @@ func (mine *SchoolInfo)GetClassByMaster(teacher string) *ClassInfo {
 	return nil
 }
 
-func (mine *SchoolInfo)GetClassByStudent(uid string, st StudentStatus) *ClassInfo {
+func (mine *SchoolInfo) GetClassByStudent(uid string, st StudentStatus) *ClassInfo {
 	if uid == "" {
 		return nil
 	}
@@ -1103,7 +1124,7 @@ func (mine *SchoolInfo)GetClassByStudent(uid string, st StudentStatus) *ClassInf
 	return nil
 }
 
-func (mine *SchoolInfo)GetClassesByMaster(master string) []*ClassInfo {
+func (mine *SchoolInfo) GetClassesByMaster(master string) []*ClassInfo {
 	if master == "" {
 		return nil
 	}
@@ -1117,7 +1138,7 @@ func (mine *SchoolInfo)GetClassesByMaster(master string) []*ClassInfo {
 	return list
 }
 
-func (mine *SchoolInfo)GetClassesByAssistant(master string) []*ClassInfo {
+func (mine *SchoolInfo) GetClassesByAssistant(master string) []*ClassInfo {
 	mine.initClasses()
 	list := make([]*ClassInfo, 0, 2)
 	for _, item := range mine.classes {
@@ -1128,7 +1149,7 @@ func (mine *SchoolInfo)GetClassesByAssistant(master string) []*ClassInfo {
 	return list
 }
 
-func (mine *SchoolInfo)GetClassesByTeacher(teacher string) []*ClassInfo {
+func (mine *SchoolInfo) GetClassesByTeacher(teacher string) []*ClassInfo {
 	mine.initClasses()
 	list := make([]*ClassInfo, 0, 2)
 	for _, item := range mine.classes {
@@ -1145,7 +1166,7 @@ func (mine *SchoolInfo)GetClassesByTeacher(teacher string) []*ClassInfo {
 	return list
 }
 
-func (mine *SchoolInfo)GetClassesUIDsByTeacher(teacher string) []string {
+func (mine *SchoolInfo) GetClassesUIDsByTeacher(teacher string) []string {
 	mine.initClasses()
 	list := make([]string, 0, 2)
 	for _, item := range mine.classes {
@@ -1162,7 +1183,7 @@ func (mine *SchoolInfo)GetClassesUIDsByTeacher(teacher string) []string {
 	return list
 }
 
-func (mine *SchoolInfo)isClassRepeated(list []*ClassInfo, uid string) bool {
+func (mine *SchoolInfo) isClassRepeated(list []*ClassInfo, uid string) bool {
 	for _, class := range list {
 		if class.UID == uid {
 			return true
@@ -1171,7 +1192,7 @@ func (mine *SchoolInfo)isClassRepeated(list []*ClassInfo, uid string) bool {
 	return false
 }
 
-func (mine *SchoolInfo)GetClassByEntity(entity string, st StudentStatus) *ClassInfo {
+func (mine *SchoolInfo) GetClassByEntity(entity string, st StudentStatus) *ClassInfo {
 	student := mine.getStudentByEntity(entity)
 	if student == nil {
 		return nil
@@ -1179,11 +1200,11 @@ func (mine *SchoolInfo)GetClassByEntity(entity string, st StudentStatus) *ClassI
 	return mine.GetClassByStudent(student.UID, st)
 }
 
-func (mine *SchoolInfo)checkClass(name, operator string, enrol proxy.DateInfo, class, kind uint16) *ClassInfo {
+func (mine *SchoolInfo) checkClass(name, operator string, enrol proxy.DateInfo, class, kind uint16) *ClassInfo {
 	var info *ClassInfo
 	info = mine.GetClassByEnrol(enrol, class)
 	if info == nil {
-		_,err := mine.CreateClasses(name, enrol.String(), operator, class, kind)
+		_, err := mine.CreateClasses(name, enrol.String(), operator, class, kind)
 		if err == nil {
 			info = mine.GetClassByEnrol(enrol, class)
 		}
@@ -1213,18 +1234,18 @@ func (mine *SchoolInfo) GetClassByEnrol(enrol proxy.DateInfo, number uint16) *Cl
 	return nil
 }
 
-func (mine *SchoolInfo)RemoveClass(uid, operator string) error {
+func (mine *SchoolInfo) RemoveClass(uid, operator string) error {
 	info := mine.GetClass(uid)
 	if info == nil {
 		return errors.New("not found the class")
 	}
 	err := info.remove(operator)
-	if err == nil{
-		for i:= 0;i < len(mine.classes);i += 1 {
+	if err == nil {
+		for i := 0; i < len(mine.classes); i += 1 {
 			if mine.classes[i].UID == uid {
-				if i == len(mine.classes) - 1 {
+				if i == len(mine.classes)-1 {
 					mine.classes = append(mine.classes[:i])
-				}else{
+				} else {
 					mine.classes = append(mine.classes[:i], mine.classes[i+1:]...)
 				}
 				break
@@ -1233,9 +1254,10 @@ func (mine *SchoolInfo)RemoveClass(uid, operator string) error {
 	}
 	return err
 }
+
 //endregion
 
-func (mine *SchoolInfo)CreateTimetable(class, operator string, year uint32, items []proxy.TimetableItem) (*TimetableInfo, error) {
+func (mine *SchoolInfo) CreateTimetable(class, operator string, year uint32, items []proxy.TimetableItem) (*TimetableInfo, error) {
 	db := new(nosql.Timetable)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetTimetableNextID()
@@ -1259,8 +1281,8 @@ func (mine *SchoolInfo)CreateTimetable(class, operator string, year uint32, item
 	return info, nil
 }
 
-func (mine *SchoolInfo)GetTimetablesBy(year uint32) ([]*TimetableInfo,error) {
-	list,err := nosql.GetTimetablesBy(mine.UID, year)
+func (mine *SchoolInfo) GetTimetablesBy(year uint32) ([]*TimetableInfo, error) {
+	list, err := nosql.GetTimetablesBy(mine.UID, year)
 	if err != nil {
 		return nil, err
 	}
@@ -1270,16 +1292,15 @@ func (mine *SchoolInfo)GetTimetablesBy(year uint32) ([]*TimetableInfo,error) {
 		info.initInfo(item)
 		arr = append(arr, info)
 	}
-	return arr,nil
+	return arr, nil
 }
 
-func (mine *SchoolInfo)GetTimetable(class string, year uint32) (*TimetableInfo,error) {
-	db,err := nosql.GetTimetable(mine.UID, class, year)
+func (mine *SchoolInfo) GetTimetable(class string, year uint32) (*TimetableInfo, error) {
+	db, err := nosql.GetTimetable(mine.UID, class, year)
 	if err != nil {
 		return nil, err
 	}
 	info := new(TimetableInfo)
 	info.initInfo(db)
-	return info,nil
+	return info, nil
 }
-
