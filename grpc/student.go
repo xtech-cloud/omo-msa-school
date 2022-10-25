@@ -192,10 +192,11 @@ func (mine *StudentService) GetList(ctx context.Context, in *pb.RequestPage, out
 	var total uint32 = 0
 	var max uint32 = 0
 	var list []*cache.StudentInfo
+	//tp,er := strconv.ParseInt(in.Value, 10, 32)
 	if in.Filter == "entities" {
 		total, max, list = school.GetPageStudentEntities(in.Page, in.Number)
 	} else {
-		total, max, list = school.GetPageStudents(in.Page, in.Number)
+		total, max, list = school.GetActiveStudents(in.Page, in.Number)
 	}
 
 	out.List = make([]*pb.StudentInfo, 0, len(list))

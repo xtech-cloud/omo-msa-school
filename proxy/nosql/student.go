@@ -268,6 +268,25 @@ func GetStudentsByEnrol(school, enrol string) ([]*Student, error) {
 	return items, nil
 }
 
+func GetStudentsByStatus(school string, st uint32) ([]*Student, error) {
+	var items = make([]*Student, 0, 10)
+	msg := bson.M{"school": school, "status": bson.M{"$eq": st}}
+	cursor, err1 := findMany(TableStudent, msg, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		var node = new(Student)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func UpdateStudentBase(uid, name, sn, card, sid, operator string, sex uint8, arr []proxy.CustodianInfo) error {
 	msg := bson.M{"name": name, "sn": sn, "card": card, "sid": sid, "sex": sex, "custodians": arr,
 		"operator": operator, "updatedAt": time.Now()}

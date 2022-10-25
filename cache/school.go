@@ -722,6 +722,14 @@ func (mine *SchoolInfo) GetActiveStudents(page, number uint32) (uint32, uint32, 
 	return total, maxPage, list.([]*StudentInfo)
 }
 
+//func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint32, uint32, []*StudentInfo) {
+//	if st == StudentActive {
+//		return mine.GetActiveStudents(page, number)
+//	}else{
+//		nosql.GetStudentsByStatus(mine.UID, st)
+//	}
+//}
+
 //endregion
 
 //region Teacher Fun
