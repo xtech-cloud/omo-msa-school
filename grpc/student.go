@@ -166,6 +166,8 @@ func (mine *StudentService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 			} else {
 				list = cache.Context().GetStudentsByIDCard(in.Value, in.Params)
 			}
+		} else if in.Filter == "custodian" {
+			list = cache.Context().GetStudentsByCustodian(in.Value)
 		}
 	}
 	out.List = make([]*pb.StudentInfo, 0, len(list))

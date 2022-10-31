@@ -231,7 +231,27 @@ func GetStudentsByKeyword(school, key string) ([]*Student, error) {
 func GetStudentsByCustodian(school, phone string) ([]*Student, error) {
 	var items = make([]*Student, 0, 10)
 	//msg := bson.M{"school":school, "custodians.phone": phone}
-	msg := bson.M{"school": school, "custodians": bson.M{"$elemMatch": bson.M{"phones": bson.M{"$elemMatch": bson.M{"$eq": phone}}}}}
+	msg := bson.M{"school": school, "deleteAt": new(time.Time), "custodians": bson.M{"$elemMatch": bson.M{"phones": bson.M{"$elemMatch": bson.M{"$eq": phone}}}}}
+	cursor, err1 := findMany(TableStudent, msg, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		var node = new(Student)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
+func GetStudentsByCustodian2(phone string) ([]*Student, error) {
+	var items = make([]*Student, 0, 10)
+	//msg := bson.M{"school":school, "custodians.phone": phone}
+	msg := bson.M{"deleteAt": new(time.Time), "custodians": bson.M{"$elemMatch": bson.M{"phones": bson.M{"$elemMatch": bson.M{"$eq": phone}}}}}
 	cursor, err1 := findMany(TableStudent, msg, 0)
 	if err1 != nil {
 		return nil, err1
@@ -251,7 +271,7 @@ func GetStudentsByCustodian(school, phone string) ([]*Student, error) {
 func GetStudentsByEnrol(school, enrol string) ([]*Student, error) {
 	var items = make([]*Student, 0, 10)
 	//msg := bson.M{"school":school, "custodians.phone": phone}
-	msg := bson.M{"school": school, "enrol": bson.M{"$elemMatch": bson.M{"name": bson.M{"$elemMatch": bson.M{"$eq": enrol}}}}}
+	msg := bson.M{"school": school, "deleteAt": new(time.Time), "enrol": bson.M{"$elemMatch": bson.M{"name": bson.M{"$elemMatch": bson.M{"$eq": enrol}}}}}
 	cursor, err1 := findMany(TableStudent, msg, 0)
 	if err1 != nil {
 		return nil, err1

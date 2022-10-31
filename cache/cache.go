@@ -275,6 +275,23 @@ func (mine *cacheContext) GetStudentsByIDCard(card, phone string) []*StudentInfo
 	return list
 }
 
+func (mine *cacheContext) GetStudentsByCustodian(phone string) []*StudentInfo {
+	list := make([]*StudentInfo, 0, 2)
+	if phone == "" {
+		return list
+	}
+	array, err := nosql.GetStudentsByCustodian2(phone)
+	if err != nil {
+		return list
+	}
+	for _, student := range array {
+		info := new(StudentInfo)
+		info.initInfo(student)
+		list = append(list, info)
+	}
+	return list
+}
+
 func (mine *cacheContext) GetStudentsByCard(card string) []*StudentInfo {
 	list := make([]*StudentInfo, 0, 4)
 	if len(card) < 1 {
