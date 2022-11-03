@@ -7,6 +7,7 @@ import (
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.school/cache"
 	"omo.msa.school/proxy"
+	"strconv"
 )
 
 type StudentService struct{}
@@ -194,9 +195,13 @@ func (mine *StudentService) GetList(ctx context.Context, in *pb.RequestPage, out
 	var total uint32 = 0
 	var max uint32 = 0
 	var list []*cache.StudentInfo
-	//tp,er := strconv.ParseInt(in.Value, 10, 32)
 	if in.Filter == "entities" {
 		total, max, list = school.GetPageStudentEntities(in.Page, in.Number)
+	} else if in.Filter == "type" {
+		tp, er := strconv.ParseInt(in.Value, 10, 32)
+		if er == nil {
+			total, max, list = school.GetStudentsByType(in.Page, in.Number, cache.StudentStatus(tp))
+		}
 	} else {
 		total, max, list = school.GetActiveStudents(in.Page, in.Number)
 	}

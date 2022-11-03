@@ -26,7 +26,7 @@ type Student struct {
 	Sex       uint8          `json:"sex" bson:"sex"`
 	//学籍号
 	SID string `json:"sid" bson:"sid"`
-	// 学号
+	// 系统生成的身份序列号
 	SN string `json:"sn" bson:"sn"`
 	// 身份证号
 	IDCard string `json:"card" bson:"card"`
