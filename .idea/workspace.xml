@@ -5,10 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a05ba135-6255-4d98-bd13-c6891acdbbe0" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/cache/lesson.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cache/schedule.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/grpc/lesson.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/grpc/schedule.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proxy/nosql/schedule.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/base.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/base.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/classes.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/classes.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cache/school.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/school.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grpc/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/student.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proxy/nosql/student.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/student.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/teacher.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/teacher.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache/timetable.go" beforeDir="false" afterPath="$PROJECT_DIR$/cache/timetable.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/nosql/lesson.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/lesson.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/nosql/table.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/nosql/table.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,17 +52,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.watchers.conflict.with.on.save.actions.check.performed&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Administrator&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "RunOnceActivity.go.watchers.conflict.with.on.save.actions.check.performed": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "go.import.settings.migrated": "true",
+    "last_opened_file_path": "C:/Users/Administrator"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="omo-msa-school" />

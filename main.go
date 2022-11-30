@@ -45,6 +45,8 @@ func main() {
 	_ = proto.RegisterStudentServiceHandler(service.Server(), new(grpc.StudentService))
 	_ = proto.RegisterTeacherServiceHandler(service.Server(), new(grpc.TeacherService))
 	_ = proto.RegisterTimetableServiceHandler(service.Server(), new(grpc.TimetableService))
+	_ = proto.RegisterLessonServiceHandler(service.Server(), new(grpc.LessonService))
+	_ = proto.RegisterScheduleServiceHandler(service.Server(), new(grpc.ScheduleService))
 
 	app, _ := filepath.Abs(os.Args[0])
 

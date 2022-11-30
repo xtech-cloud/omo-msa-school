@@ -25,7 +25,7 @@ type baseInfo struct {
 
 type PairIntInfo struct {
 	Value uint32
-	Key uint32
+	Key   uint32
 }
 
 type cacheContext struct {
@@ -46,7 +46,7 @@ func InitData() error {
 	}
 	checkSequences()
 	//num,_ := nosql.GetSchoolCount()
-	schools,_ := nosql.GetUsableSchools()
+	schools, _ := nosql.GetUsableSchools()
 	for _, school := range schools {
 		info := new(SchoolInfo)
 		info.initInfo(school)
@@ -61,14 +61,14 @@ func Context() *cacheContext {
 	return cacheCtx
 }
 
-func checkSequences()  {
+func checkSequences() {
 	arr := make([]string, 0, 6)
 	arr = append(arr, "school_"+nosql.TableApply)
 	arr = append(arr, "school_"+nosql.TableClass)
 	arr = append(arr, "school_"+nosql.TableLesson)
 	arr = append(arr, "school_"+nosql.TableStudent)
 	arr = append(arr, "school_"+nosql.TableTeacher)
-	all,_ := nosql.GetAllSequences()
+	all, _ := nosql.GetAllSequences()
 	for _, s := range all {
 		if tool.HasItem(arr, s.Name) {
 			k := strings.Replace(s.Name, "school_", "", 1)
@@ -84,7 +84,7 @@ func checkSequences()  {
 	arr2 = append(arr2, nosql.TableStudent)
 	arr2 = append(arr2, nosql.TableTeacher)
 	arr2 = append(arr2, nosql.TableSequence)
-	all2,_ := nosql.GetAllSequences()
+	all2, _ := nosql.GetAllSequences()
 	for _, s := range all2 {
 		if !tool.HasItem(arr2, s.Name) {
 			_ = nosql.DeleteSequence(s.UID.Hex())
@@ -92,7 +92,7 @@ func checkSequences()  {
 	}
 }
 
-func checkPage( page, number uint32, all interface{}) (uint32, uint32, interface{}) {
+func checkPage(page, number uint32, all interface{}) (uint32, uint32, interface{}) {
 	if number < 1 {
 		number = 10
 	}
@@ -116,9 +116,20 @@ func checkPage( page, number uint32, all interface{}) (uint32, uint32, interface
 	return total, maxPage, list.Interface()
 }
 
-func (mine *cacheContext)AllSchools(page, number uint32) (uint32, uint32, []*SchoolInfo) {
+func parseDate(date string) (time.Time, error) {
+	f, er := time.ParseInLocation("2006-01-02", date, time.Local)
+	if er != nil {
+		return time.Now(), er
+	}
+	if f.IsZero() {
+		return f, errors.New("the date is zero")
+	}
+	return f, nil
+}
+
+func (mine *cacheContext) AllSchools(page, number uint32) (uint32, uint32, []*SchoolInfo) {
 	if len(mine.schools) < 1 {
-		schools,_ := nosql.GetUsableSchools()
+		schools, _ := nosql.GetUsableSchools()
 		for _, school := range schools {
 			info := new(SchoolInfo)
 			info.initInfo(school)
@@ -132,10 +143,10 @@ func (mine *cacheContext)AllSchools(page, number uint32) (uint32, uint32, []*Sch
 		return 0, 0, make([]*SchoolInfo, 0, 1)
 	}
 	total, max, list := checkPage(page, number, mine.schools)
-	return total, max ,list.([]*SchoolInfo)
+	return total, max, list.([]*SchoolInfo)
 }
 
-func (mine *cacheContext)AllTeachers(page, number uint32) (uint32, uint32,[]*TeacherInfo) {
+func (mine *cacheContext) AllTeachers(page, number uint32) (uint32, uint32, []*TeacherInfo) {
 	if number < 1 {
 		number = 10
 	}
@@ -148,18 +159,18 @@ func (mine *cacheContext)AllTeachers(page, number uint32) (uint32, uint32,[]*Tea
 
 func parsePhones(phones string) []string {
 	list := make([]string, 0, 2)
-	if strings.Contains(phones,",") {
-		array := strings.Split(phones,",")
+	if strings.Contains(phones, ",") {
+		array := strings.Split(phones, ",")
 		for _, item := range array {
 			list = append(list, item)
 		}
-	}else{
+	} else {
 		list = append(list, phones)
 	}
 	return list
 }
 
-func (mine *cacheContext)CreateSchool(name, entity, scene string, maxGrade int) (*SchoolInfo,error) {
+func (mine *cacheContext) CreateSchool(name, entity, scene string, maxGrade int) (*SchoolInfo, error) {
 	if scene == "" {
 		return nil, errors.New("the scene uid is empty")
 	}
@@ -187,67 +198,67 @@ func (mine *cacheContext)CreateSchool(name, entity, scene string, maxGrade int) 
 		school.initInfo(db)
 
 		mine.schools = append(mine.schools, school)
-		return school,nil
-	}else{
-		return nil,err1
+		return school, nil
+	} else {
+		return nil, err1
 	}
 }
 
-func (mine *cacheContext) GetSchoolByUID(uid string) (*SchoolInfo,error) {
+func (mine *cacheContext) GetSchoolByUID(uid string) (*SchoolInfo, error) {
 	if len(uid) < 1 {
-		return nil,errors.New("the school uid is empty")
+		return nil, errors.New("the school uid is empty")
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		if mine.schools[i].UID == uid {
 			return mine.schools[i], nil
 		}
 	}
-	db,_ := nosql.GetSchool(uid)
+	db, _ := nosql.GetSchool(uid)
 	if db == nil {
 		return mine.GetSchoolScene(uid)
 	}
 	school := new(SchoolInfo)
 	school.initInfo(db)
 	mine.schools = append(mine.schools, school)
-	return school,nil
+	return school, nil
 }
 
-func (mine *cacheContext) GetSchoolScene(scene string) (*SchoolInfo,error) {
+func (mine *cacheContext) GetSchoolScene(scene string) (*SchoolInfo, error) {
 	if scene == "" {
-		return nil,errors.New("the school uid is empty")
+		return nil, errors.New("the school uid is empty")
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		if mine.schools[i].Scene == scene {
-			return mine.schools[i],nil
+			return mine.schools[i], nil
 		}
 	}
-	db,err := nosql.GetSchoolByScene(scene)
+	db, err := nosql.GetSchoolByScene(scene)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	school := new(SchoolInfo)
 	school.initInfo(db)
 	mine.schools = append(mine.schools, school)
-	return school,nil
+	return school, nil
 }
 
-func (mine *cacheContext) GetSchoolByName(name string) (*SchoolInfo,error) {
+func (mine *cacheContext) GetSchoolByName(name string) (*SchoolInfo, error) {
 	if name == "" {
-		return nil,errors.New("the school uid is empty")
+		return nil, errors.New("the school uid is empty")
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		if mine.schools[i].Name == name {
-			return mine.schools[i],nil
+			return mine.schools[i], nil
 		}
 	}
-	db,_ := nosql.GetSchoolByName(name)
+	db, _ := nosql.GetSchoolByName(name)
 	if db != nil {
 		school := new(SchoolInfo)
 		school.initInfo(db)
 		mine.schools = append(mine.schools, school)
-		return school,nil
-	}else{
-		return nil,errors.New("not found the school by name")
+		return school, nil
+	} else {
+		return nil, errors.New("not found the school by name")
 	}
 }
 
@@ -255,18 +266,18 @@ func (mine *cacheContext) GetSchoolByEntity(entity string) *SchoolInfo {
 	if entity == "" {
 		return nil
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		if mine.schools[i].Entity == entity {
 			return mine.schools[i]
 		}
 	}
-	db,_ := nosql.GetSchoolByEntity(entity)
+	db, _ := nosql.GetSchoolByEntity(entity)
 	if db != nil {
 		school := new(SchoolInfo)
 		school.initInfo(db)
 		mine.schools = append(mine.schools, school)
 		return school
-	}else{
+	} else {
 		return nil
 	}
 }
@@ -275,17 +286,17 @@ func (mine *cacheContext) GetSchoolByClass(class string) *SchoolInfo {
 	if class == "" {
 		return nil
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		mine.schools[i].initClasses()
 		if mine.schools[i].hadClass(class) {
 			return mine.schools[i]
 		}
 	}
-	db,_ := nosql.GetClass(class)
+	db, _ := nosql.GetClass(class)
 	if db == nil {
 		return nil
 	}
-	tmp,_ := mine.GetSchoolByUID(db.School)
+	tmp, _ := mine.GetSchoolByUID(db.School)
 	return tmp
 }
 
@@ -293,7 +304,7 @@ func (mine *cacheContext) GetSchoolByStudent(student string, st StudentStatus) *
 	if student == "" {
 		return nil
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		if mine.schools[i].hadStudentByStatus(student, st) {
 			return mine.schools[i]
 		}
@@ -305,7 +316,7 @@ func (mine *cacheContext) GetSchoolByStudent2(student string) *SchoolInfo {
 	if student == "" {
 		return nil
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		if mine.schools[i].hadStudent(student) {
 			return mine.schools[i]
 		}
@@ -313,13 +324,13 @@ func (mine *cacheContext) GetSchoolByStudent2(student string) *SchoolInfo {
 	return nil
 }
 
-func (mine *cacheContext) GetSchoolsByStudentEntity(entity string) ([]*SchoolInfo,[]*ClassInfo) {
+func (mine *cacheContext) GetSchoolsByStudentEntity(entity string) ([]*SchoolInfo, []*ClassInfo) {
 	list := make([]*SchoolInfo, 0, 5)
 	classes := make([]*ClassInfo, 0, 10)
 	if entity == "" {
 		return list, classes
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		stu := mine.schools[i].getStudentByEntity(entity)
 		if stu != nil {
 			list = append(list, mine.schools[i])
@@ -336,7 +347,7 @@ func (mine *cacheContext) GetSchoolByTeacher(uid string) *SchoolInfo {
 	if uid == "" {
 		return nil
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		if mine.schools[i].hadTeacher(uid) {
 			return mine.schools[i]
 		}
@@ -348,7 +359,7 @@ func (mine *cacheContext) GetSchoolByUser(uid string) *SchoolInfo {
 	if uid == "" {
 		return nil
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		if mine.schools[i].hadTeacherByUser(uid) {
 			return mine.schools[i]
 		}
@@ -361,7 +372,7 @@ func (mine *cacheContext) GetSchoolsByStudent(student string) []*SchoolInfo {
 	if student == "" {
 		return list
 	}
-	for i := 0;i < len(mine.schools);i += 1 {
+	for i := 0; i < len(mine.schools); i += 1 {
 		if mine.schools[i].hadStudentByStatus(student, StudentAll) {
 			list = append(list, mine.schools[i])
 		}
