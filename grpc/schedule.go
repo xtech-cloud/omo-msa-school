@@ -98,9 +98,16 @@ func (mine *ScheduleService) GetByFilter(ctx context.Context, in *pb.RequestPage
 	if in.Filter == "" {
 		list, err = scene.GetSchedules()
 	} else if in.Filter == "dates" {
+		if len(in.List) < 2 {
+			err = errors.New("the filter of dates length < 2")
+		}
 		from := in.List[0]
 		to := in.List[1]
 		list, err = scene.GetSchedulesByDates(from, to)
+	} else if in.Filter == "date" {
+		list, err = scene.GetSchedulesByDate(in.Value)
+	} else {
+		err = errors.New("the filter not defined")
 	}
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)

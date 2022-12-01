@@ -102,6 +102,10 @@ func (mine *SchoolInfo) GetSchedulesByDates(from, to string) ([]*ScheduleInfo, e
 	return cacheCtx.GetSchedulesByDuring(mine.Scene, from, to)
 }
 
+func (mine *SchoolInfo) GetSchedulesByDate(date string) ([]*ScheduleInfo, error) {
+	return cacheCtx.GetSchedulesByDate(mine.Scene, date)
+}
+
 func (mine *cacheContext) CreateSampleSchedule(scene, date, operator string) (*ScheduleInfo, error) {
 	return mine.CreateSchedule(scene, "", "", date, "", operator, 0, 0, nil)
 }
@@ -118,6 +122,24 @@ func (mine *cacheContext) GetSchedule(uid string) (*ScheduleInfo, error) {
 
 func (mine *cacheContext) GetSchedules(scene string) ([]*ScheduleInfo, error) {
 	dbs, err := nosql.GetSchedulesByScene(scene)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*ScheduleInfo, 0, len(dbs))
+	for _, db := range dbs {
+		info := new(ScheduleInfo)
+		info.initInfo(db)
+		list = append(list, info)
+	}
+	return list, nil
+}
+
+func (mine *cacheContext) GetSchedulesByDate(scene, date string) ([]*ScheduleInfo, error) {
+	d, er := parseDate(date)
+	if er != nil {
+		return nil, er
+	}
+	dbs, err := nosql.GetSchedulesByDate(scene, d)
 	if err != nil {
 		return nil, err
 	}

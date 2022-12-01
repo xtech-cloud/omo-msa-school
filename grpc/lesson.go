@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	pb "github.com/xtech-cloud/omo-msp-school/proto/school"
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
@@ -157,6 +158,10 @@ func (mine *LessonService) SetByFilter(ctx context.Context, in *pb.RequestPage, 
 		}
 	} else if in.Filter == "cover" {
 		er = info.UpdateCover(in.Operator, in.Value)
+	} else if in.Filter == "assets" {
+		er = info.UpdateAssets(in.Operator, in.List)
+	} else {
+		er = errors.New("the filter not defined")
 	}
 	if er != nil {
 		out.Status = outError(path, er.Error(), pbstatus.ResultStatus_FormatError)
