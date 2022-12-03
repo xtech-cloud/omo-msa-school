@@ -17,15 +17,17 @@ type Schedule struct {
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Status   uint8     `json:"status" bson:"status"`
-	LimitMax uint32    `json:"max" bson:"max"`
-	LimitMin uint32    `json:"min" bson:"min"`
-	Date     time.Time `json:"date" bson:"date"` //日期
-	Name     string    `json:"name" bson:"name"`
-	Scene    string    `json:"scene" bson:"scene"`
-	Lesson   string    `json:"lesson" bson:"lesson"` //课程
-	Place    string    `json:"place" bson:"place"`   //地址
-	During   string    `json:"during" bson:"during"`
+	Status    uint8     `json:"status" bson:"status"`
+	LimitMax  uint32    `json:"max" bson:"max"`
+	LimitMin  uint32    `json:"min" bson:"min"`
+	StartTime uint64    `json:"startTime" bson:"startTime"` //报名开始时间
+	EndTime   uint64    `json:"endTime" bson:"endTime"`     //报名截止时间
+	Date      time.Time `json:"date" bson:"date"`           //日期
+	Name      string    `json:"name" bson:"name"`
+	Scene     string    `json:"scene" bson:"scene"`
+	Lesson    string    `json:"lesson" bson:"lesson"` //课程
+	Place     string    `json:"place" bson:"place"`   //地址
+	During    string    `json:"during" bson:"during"`
 
 	Teachers []string `json:"teachers" bson:"teachers"`
 	Tags     []string `json:"tags" bson:"tags"`
@@ -141,8 +143,8 @@ func UpdateScheduleBase(uid, lesson, place, times, operator string, max, min uin
 	return err
 }
 
-func UpdateScheduleStatus(uid, operator string, st uint8) error {
-	msg := bson.M{"operator": operator, "status": st, "updatedAt": time.Now()}
+func UpdateScheduleStatus(uid, operator string, st uint8, start, end uint64) error {
+	msg := bson.M{"operator": operator, "status": st, "startTime": start, "endTime": end, "updatedAt": time.Now()}
 	_, err := updateOne(TableSchedules, uid, msg)
 	return err
 }

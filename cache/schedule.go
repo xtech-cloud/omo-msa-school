@@ -13,16 +13,18 @@ const (
 )
 
 type ScheduleInfo struct {
-	Status   uint8
-	LimitMax uint32
-	LimitMin uint32
+	Status    uint8
+	LimitMax  uint32
+	LimitMin  uint32
+	StartTime uint64 //报名开始时间
+	EndTime   uint64 // 报名截止时间
 	baseInfo
 	Name   string
 	Scene  string
 	Lesson string //课程
 	Place  string //地址
 	Date   string //日期 2022-04-04
-	Times  string //时间 12:30-13:30
+	Times  string //期间时间 12:30-13:30
 
 	Teachers []string
 	Tags     []string
@@ -46,6 +48,8 @@ func (mine *ScheduleInfo) initInfo(db *nosql.Schedule) {
 	mine.Place = db.Place
 	mine.Date = db.Date.Format("2006-01-02")
 	mine.Times = db.During
+	mine.StartTime = db.StartTime
+	mine.EndTime = db.EndTime
 	mine.Tags = db.Tags
 	mine.Teachers = db.Teachers
 	mine.Users = db.Users
@@ -189,9 +193,33 @@ func (mine *ScheduleInfo) UpdateInfo(lesson, place, times, operator string, max,
 	return err
 }
 
-func (mine *ScheduleInfo) UpdateStatus(operator string, st uint8) error {
-	err := nosql.UpdateScheduleStatus(mine.UID, operator, st)
+func (mine *ScheduleInfo) UpdateTags(operator string, tags []string) error {
+	err := nosql.UpdateScheduleTags(mine.UID, operator, tags)
 	if err == nil {
+		mine.Tags = tags
+		mine.Operator = operator
+		mine.UpdateTime = time.Now()
+	}
+	return err
+}
+
+func (mine *ScheduleInfo) UpdateStatus(operator string, start, end uint64, st uint8) error {
+	err := nosql.UpdateScheduleStatus(mine.UID, operator, st, start, end)
+	if err == nil {
+		mine.StartTime = start
+		mine.EndTime = end
+		mine.Operator = operator
+		mine.Status = st
+		mine.UpdateTime = time.Now()
+	}
+	return err
+}
+
+func (mine *ScheduleInfo) UpdateStatus2(operator string, st uint8) error {
+	err := nosql.UpdateScheduleStatus(mine.UID, operator, st, 0, 0)
+	if err == nil {
+		mine.StartTime = 0
+		mine.EndTime = 0
 		mine.Operator = operator
 		mine.Status = st
 		mine.UpdateTime = time.Now()

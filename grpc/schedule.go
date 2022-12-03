@@ -29,6 +29,8 @@ func switchSchedule(info *cache.ScheduleInfo) *pb.ScheduleInfo {
 	tmp.Min = info.LimitMin
 	tmp.Status = uint32(info.Status)
 	tmp.Scene = info.Scene
+	tmp.Start = info.StartTime
+	tmp.End = info.EndTime
 
 	tmp.Tags = info.Tags
 	tmp.Teachers = info.Teachers
@@ -164,8 +166,16 @@ func (mine *ScheduleService) SetByFilter(ctx context.Context, in *pb.RequestPage
 	if in.Filter == "status" {
 		st, er1 := strconv.ParseInt(in.Value, 10, 32)
 		if er1 == nil {
-			er = info.UpdateStatus(in.Operator, uint8(st))
+			if len(in.List) < 2 {
+				er = info.UpdateStatus2(in.Operator, uint8(st))
+			} else {
+				start, _ := strconv.ParseUint(in.List[0], 10, 64)
+				end, _ := strconv.ParseUint(in.List[1], 10, 64)
+				er = info.UpdateStatus(in.Operator, start, end, uint8(st))
+			}
 		}
+	} else if in.Filter == "tags" {
+		er = info.UpdateTags(in.Operator, in.List)
 	} else {
 		er = errors.New("the filter not defined")
 	}
