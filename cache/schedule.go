@@ -8,22 +8,23 @@ import (
 )
 
 const (
-	ScheduleStatusFroze = 0 //冻结
-	ScheduleStatusIdle  = 1 //发布
+	ScheduleStatusFroze = 0 //冻结编辑中
+	ScheduleStatusOrder = 1 //发布
+	ScheduleStatusIdle  = 2 //开课
 )
 
 type ScheduleInfo struct {
 	Status    uint8
 	LimitMax  uint32
 	LimitMin  uint32
-	StartTime uint64 //报名开始时间
-	EndTime   uint64 // 报名截止时间
+	StartTime int64  //报名开始时间
+	EndTime   int64  // 报名截止时间
+	Date      string //日期 2022-04-04
 	baseInfo
 	Name   string
 	Scene  string
 	Lesson string //课程
 	Place  string //地址
-	Date   string //日期 2022-04-04
 	Times  string //期间时间 12:30-13:30
 
 	Teachers []string
@@ -46,7 +47,7 @@ func (mine *ScheduleInfo) initInfo(db *nosql.Schedule) {
 	mine.Scene = db.Scene
 	mine.Lesson = db.Lesson
 	mine.Place = db.Place
-	mine.Date = db.Date.Format("2006-01-02")
+	mine.Date = time.Unix(db.Date, 0).Format("2006-01-02")
 	mine.Times = db.During
 	mine.StartTime = db.StartTime
 	mine.EndTime = db.EndTime
@@ -69,7 +70,7 @@ func (mine *cacheContext) CreateSchedule(scene, lesson, place, date, times, oper
 	db.Name = ""
 	db.Lesson = lesson
 	db.Place = place
-	db.Date = d
+	db.Date = d.Unix()
 	db.During = times
 	db.LimitMin = min
 	db.LimitMax = max
@@ -203,7 +204,7 @@ func (mine *ScheduleInfo) UpdateTags(operator string, tags []string) error {
 	return err
 }
 
-func (mine *ScheduleInfo) UpdateStatus(operator string, start, end uint64, st uint8) error {
+func (mine *ScheduleInfo) UpdateStatus(operator string, start, end int64, st uint8) error {
 	err := nosql.UpdateScheduleStatus(mine.UID, operator, st, start, end)
 	if err == nil {
 		mine.StartTime = start

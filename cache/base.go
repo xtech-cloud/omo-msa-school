@@ -117,7 +117,7 @@ func checkPage(page, number uint32, all interface{}) (uint32, uint32, interface{
 }
 
 func parseDate(date string) (time.Time, error) {
-	f, er := time.ParseInLocation("2006-01-02", date, time.Local)
+	f, er := time.ParseInLocation("2006-01-02", date, time.UTC)
 	if er != nil {
 		return time.Now(), er
 	}
