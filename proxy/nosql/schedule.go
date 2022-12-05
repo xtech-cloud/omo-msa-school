@@ -98,7 +98,7 @@ func GetSchedulesByScene(uid string) ([]*Schedule, error) {
 	return items, nil
 }
 
-func GetSchedulesByDate(scene string, date time.Time) ([]*Schedule, error) {
+func GetSchedulesByDate(scene string, date int64) ([]*Schedule, error) {
 	var items = make([]*Schedule, 0, 100)
 	msg := bson.M{"scene": scene, "date": date, "deleteAt": new(time.Time)}
 	cursor, err1 := findMany(TableSchedules, msg, 0)
@@ -117,7 +117,7 @@ func GetSchedulesByDate(scene string, date time.Time) ([]*Schedule, error) {
 	return items, nil
 }
 
-func GetSchedulesByDuring(scene string, from, to time.Time) ([]*Schedule, error) {
+func GetSchedulesByDuring(scene string, from, to int64) ([]*Schedule, error) {
 	var items = make([]*Schedule, 0, 100)
 	msg := bson.M{"scene": scene, "deleteAt": new(time.Time), "$and": bson.A{bson.M{"date": bson.M{"$gte": from}}, bson.M{"date": bson.M{"$lte": to}}}}
 	cursor, err1 := findMany(TableSchedules, msg, 0)

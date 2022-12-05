@@ -144,7 +144,7 @@ func (mine *cacheContext) GetSchedulesByDate(scene, date string) ([]*ScheduleInf
 	if er != nil {
 		return nil, er
 	}
-	dbs, err := nosql.GetSchedulesByDate(scene, d)
+	dbs, err := nosql.GetSchedulesByDate(scene, d.Unix())
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (mine *cacheContext) GetSchedulesByDuring(scene, from, to string) ([]*Sched
 	if er != nil {
 		return nil, er
 	}
-	dbs, err := nosql.GetSchedulesByDuring(scene, f, t)
+	dbs, err := nosql.GetSchedulesByDuring(scene, f.Unix(), t.Unix())
 	if err != nil {
 		return nil, err
 	}
