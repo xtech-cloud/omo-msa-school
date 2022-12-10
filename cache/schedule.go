@@ -58,7 +58,7 @@ func (mine *ScheduleInfo) initInfo(db *nosql.Schedule) {
 	mine.Users = db.Users
 }
 
-func (mine *cacheContext) CreateSchedule(scene, lesson, place, date, times, operator string, min, max uint32, teachers []string) (*ScheduleInfo, error) {
+func (mine *cacheContext) CreateSchedule(scene, remark, lesson, place, date, times, operator string, min, max uint32, teachers []string) (*ScheduleInfo, error) {
 	d, er := parseDate(date)
 	if er != nil {
 		return nil, er
@@ -76,7 +76,7 @@ func (mine *cacheContext) CreateSchedule(scene, lesson, place, date, times, oper
 	db.During = times
 	db.LimitMin = min
 	db.LimitMax = max
-	db.Remark = ""
+	db.Remark = remark
 	db.Status = ScheduleStatusFroze
 
 	db.Teachers = teachers
@@ -94,8 +94,8 @@ func (mine *cacheContext) CreateSchedule(scene, lesson, place, date, times, oper
 	return info, nil
 }
 
-func (mine *SchoolInfo) CreateSchedule(lesson, place, date, times, operator string, min, max uint32, teachers []string) (*ScheduleInfo, error) {
-	return cacheCtx.CreateSchedule(mine.Scene, lesson, place, date, times, operator, min, max, teachers)
+func (mine *SchoolInfo) CreateSchedule(remark, lesson, place, date, times, operator string, min, max uint32, teachers []string) (*ScheduleInfo, error) {
+	return cacheCtx.CreateSchedule(mine.Scene, remark, lesson, place, date, times, operator, min, max, teachers)
 }
 
 func (mine *SchoolInfo) GetSchedule(uid string) (*ScheduleInfo, error) {
@@ -114,8 +114,8 @@ func (mine *SchoolInfo) GetSchedulesByDate(date string) ([]*ScheduleInfo, error)
 	return cacheCtx.GetSchedulesByDate(mine.Scene, date)
 }
 
-func (mine *cacheContext) CreateSampleSchedule(scene, date, operator string) (*ScheduleInfo, error) {
-	return mine.CreateSchedule(scene, "", "", date, "", operator, 0, 0, nil)
+func (mine *cacheContext) CreateSampleSchedule(scene, remark, date, operator string) (*ScheduleInfo, error) {
+	return mine.CreateSchedule(scene, remark, "", "", date, "", operator, 0, 0, nil)
 }
 
 func (mine *cacheContext) GetSchedule(uid string) (*ScheduleInfo, error) {
@@ -185,6 +185,7 @@ func (mine *cacheContext) GetSchedulesByDuring(scene, from, to string) ([]*Sched
 func (mine *ScheduleInfo) UpdateInfo(remark, lesson, place, times, operator string, max, min uint32, teachers []string) error {
 	err := nosql.UpdateScheduleBase(mine.UID, remark, lesson, place, times, operator, max, min, teachers)
 	if err == nil {
+		mine.Remark = remark
 		mine.Lesson = lesson
 		mine.Place = place
 		mine.Times = times

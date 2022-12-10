@@ -47,7 +47,7 @@ func (mine *ScheduleService) AddOne(ctx context.Context, in *pb.ReqScheduleAdd, 
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	info, err1 := school.CreateSchedule(in.Lesson, in.Place, in.Date, in.During, in.Operator, in.Min, in.Max, in.Teachers)
+	info, err1 := school.CreateSchedule(in.Remark, in.Lesson, in.Place, in.Date, in.During, in.Operator, in.Min, in.Max, in.Teachers)
 	if err1 != nil {
 		out.Status = outError(path, err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -144,7 +144,7 @@ func (mine *ScheduleService) UpdateOne(ctx context.Context, in *pb.ReqScheduleUp
 		return nil
 	}
 
-	err1 := info.UpdateInfo("", in.Lesson, in.Place, in.During, in.Operator, in.Max, in.Min, in.Teachers)
+	err1 := info.UpdateInfo(in.Remark, in.Lesson, in.Place, in.During, in.Operator, in.Max, in.Min, in.Teachers)
 	if err1 != nil {
 		out.Status = outError(path, err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
