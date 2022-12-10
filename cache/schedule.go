@@ -22,6 +22,7 @@ type ScheduleInfo struct {
 	Date      string //日期 2022-04-04
 	baseInfo
 	Name   string
+	Remark string
 	Scene  string
 	Lesson string //课程
 	Place  string //地址
@@ -44,6 +45,7 @@ func (mine *ScheduleInfo) initInfo(db *nosql.Schedule) {
 	mine.LimitMax = db.LimitMax
 
 	mine.Name = db.Name
+	mine.Remark = db.Remark
 	mine.Scene = db.Scene
 	mine.Lesson = db.Lesson
 	mine.Place = db.Place
@@ -74,6 +76,7 @@ func (mine *cacheContext) CreateSchedule(scene, lesson, place, date, times, oper
 	db.During = times
 	db.LimitMin = min
 	db.LimitMax = max
+	db.Remark = ""
 	db.Status = ScheduleStatusFroze
 
 	db.Teachers = teachers
@@ -179,8 +182,8 @@ func (mine *cacheContext) GetSchedulesByDuring(scene, from, to string) ([]*Sched
 	return list, nil
 }
 
-func (mine *ScheduleInfo) UpdateInfo(lesson, place, times, operator string, max, min uint32, teachers []string) error {
-	err := nosql.UpdateScheduleBase(mine.UID, lesson, place, times, operator, max, min, teachers)
+func (mine *ScheduleInfo) UpdateInfo(remark, lesson, place, times, operator string, max, min uint32, teachers []string) error {
+	err := nosql.UpdateScheduleBase(mine.UID, remark, lesson, place, times, operator, max, min, teachers)
 	if err == nil {
 		mine.Lesson = lesson
 		mine.Place = place
@@ -198,6 +201,16 @@ func (mine *ScheduleInfo) UpdateTags(operator string, tags []string) error {
 	err := nosql.UpdateScheduleTags(mine.UID, operator, tags)
 	if err == nil {
 		mine.Tags = tags
+		mine.Operator = operator
+		mine.UpdateTime = time.Now()
+	}
+	return err
+}
+
+func (mine *ScheduleInfo) UpdateRemark(operator, remark string) error {
+	err := nosql.UpdateScheduleRemark(mine.UID, operator, remark)
+	if err == nil {
+		mine.Remark = remark
 		mine.Operator = operator
 		mine.UpdateTime = time.Now()
 	}

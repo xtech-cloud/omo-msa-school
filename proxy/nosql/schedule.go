@@ -24,6 +24,7 @@ type Schedule struct {
 	EndTime   int64  `json:"endTime" bson:"endTime"`     //报名截止时间
 	Date      int64  `json:"date" bson:"date"`           //日期
 	Name      string `json:"name" bson:"name"`
+	Remark    string `json:"remark" bson:"remark"`
 	Scene     string `json:"scene" bson:"scene"`
 	Lesson    string `json:"lesson" bson:"lesson"` //课程
 	Place     string `json:"place" bson:"place"`   //地址
@@ -136,8 +137,8 @@ func GetSchedulesByDuring(scene string, from, to int64) ([]*Schedule, error) {
 	return items, nil
 }
 
-func UpdateScheduleBase(uid, lesson, place, times, operator string, max, min uint32, teachers []string) error {
-	msg := bson.M{"lesson": lesson, "place": place, "during": times, "operator": operator,
+func UpdateScheduleBase(uid, remark, lesson, place, times, operator string, max, min uint32, teachers []string) error {
+	msg := bson.M{"remark": remark, "lesson": lesson, "place": place, "during": times, "operator": operator,
 		"teachers": teachers, "max": max, "min": min, "updatedAt": time.Now()}
 	_, err := updateOne(TableSchedules, uid, msg)
 	return err
@@ -151,6 +152,12 @@ func UpdateScheduleStatus(uid, operator string, st uint8, start, end int64) erro
 
 func UpdateScheduleTags(uid, operator string, tags []string) error {
 	msg := bson.M{"operator": operator, "tags": tags, "updatedAt": time.Now()}
+	_, err := updateOne(TableSchedules, uid, msg)
+	return err
+}
+
+func UpdateScheduleRemark(uid, operator, remark string) error {
+	msg := bson.M{"operator": operator, "remark": remark, "updatedAt": time.Now()}
 	_, err := updateOne(TableSchedules, uid, msg)
 	return err
 }

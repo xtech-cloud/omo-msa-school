@@ -31,6 +31,7 @@ func switchSchedule(info *cache.ScheduleInfo) *pb.ScheduleInfo {
 	tmp.Scene = info.Scene
 	tmp.Start = uint64(info.StartTime)
 	tmp.End = uint64(info.EndTime)
+	tmp.Remark = info.Remark
 
 	tmp.Tags = info.Tags
 	tmp.Teachers = info.Teachers
@@ -143,7 +144,7 @@ func (mine *ScheduleService) UpdateOne(ctx context.Context, in *pb.ReqScheduleUp
 		return nil
 	}
 
-	err1 := info.UpdateInfo(in.Lesson, in.Place, in.During, in.Operator, in.Max, in.Min, in.Teachers)
+	err1 := info.UpdateInfo("", in.Lesson, in.Place, in.During, in.Operator, in.Max, in.Min, in.Teachers)
 	if err1 != nil {
 		out.Status = outError(path, err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -176,6 +177,8 @@ func (mine *ScheduleService) SetByFilter(ctx context.Context, in *pb.RequestPage
 		}
 	} else if in.Filter == "tags" {
 		er = info.UpdateTags(in.Operator, in.List)
+	} else if in.Filter == "remark" {
+		er = info.UpdateRemark(in.Operator, in.Value)
 	} else {
 		er = errors.New("the filter not defined")
 	}
