@@ -168,11 +168,11 @@ func (mine *ScheduleService) SetByFilter(ctx context.Context, in *pb.RequestPage
 		st, er1 := strconv.ParseInt(in.Value, 10, 32)
 		if er1 == nil {
 			if len(in.List) < 2 {
-				er = info.UpdateStatus2(in.Operator, uint8(st))
+				er = info.UpdateStatus2(in.Operator, in.Params, uint8(st))
 			} else {
 				start, _ := strconv.ParseInt(in.List[0], 10, 64)
 				end, _ := strconv.ParseInt(in.List[1], 10, 64)
-				er = info.UpdateStatus(in.Operator, start, end, uint8(st))
+				er = info.UpdateStatus(in.Operator, in.Params, start, end, uint8(st))
 			}
 		}
 	} else if in.Filter == "tags" {

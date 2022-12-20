@@ -27,6 +27,7 @@ type ScheduleInfo struct {
 	Lesson string //课程
 	Place  string //地址
 	Times  string //期间时间 12:30-13:30
+	Reason string //取消原因
 
 	Teachers []string
 	Tags     []string
@@ -53,6 +54,7 @@ func (mine *ScheduleInfo) initInfo(db *nosql.Schedule) {
 	mine.Times = db.During
 	mine.StartTime = db.StartTime
 	mine.EndTime = db.EndTime
+	mine.Reason = db.Reason
 	mine.Tags = db.Tags
 	mine.Teachers = db.Teachers
 	mine.Users = db.Users
@@ -218,25 +220,27 @@ func (mine *ScheduleInfo) UpdateRemark(operator, remark string) error {
 	return err
 }
 
-func (mine *ScheduleInfo) UpdateStatus(operator string, start, end int64, st uint8) error {
-	err := nosql.UpdateScheduleStatus(mine.UID, operator, st, start, end)
+func (mine *ScheduleInfo) UpdateStatus(operator, reason string, start, end int64, st uint8) error {
+	err := nosql.UpdateScheduleStatus(mine.UID, operator, reason, st, start, end)
 	if err == nil {
 		mine.StartTime = start
 		mine.EndTime = end
 		mine.Operator = operator
 		mine.Status = st
+		mine.Reason = reason
 		mine.UpdateTime = time.Now()
 	}
 	return err
 }
 
-func (mine *ScheduleInfo) UpdateStatus2(operator string, st uint8) error {
-	err := nosql.UpdateScheduleStatus(mine.UID, operator, st, 0, 0)
+func (mine *ScheduleInfo) UpdateStatus2(operator, reason string, st uint8) error {
+	err := nosql.UpdateScheduleStatus(mine.UID, operator, reason, st, 0, 0)
 	if err == nil {
 		mine.StartTime = 0
 		mine.EndTime = 0
 		mine.Operator = operator
 		mine.Status = st
+		mine.Reason = reason
 		mine.UpdateTime = time.Now()
 	}
 	return err

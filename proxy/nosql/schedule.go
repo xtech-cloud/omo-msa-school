@@ -29,6 +29,7 @@ type Schedule struct {
 	Lesson    string `json:"lesson" bson:"lesson"` //课程
 	Place     string `json:"place" bson:"place"`   //地址
 	During    string `json:"during" bson:"during"`
+	Reason    string `json:"reason" bson:"reason"` //取消状态添加原因
 
 	Teachers []string `json:"teachers" bson:"teachers"`
 	Tags     []string `json:"tags" bson:"tags"`
@@ -144,8 +145,8 @@ func UpdateScheduleBase(uid, remark, lesson, place, times, operator string, max,
 	return err
 }
 
-func UpdateScheduleStatus(uid, operator string, st uint8, start, end int64) error {
-	msg := bson.M{"operator": operator, "status": st, "startTime": start, "endTime": end, "updatedAt": time.Now()}
+func UpdateScheduleStatus(uid, operator, reason string, st uint8, start, end int64) error {
+	msg := bson.M{"operator": operator, "reason": reason, "status": st, "startTime": start, "endTime": end, "updatedAt": time.Now()}
 	_, err := updateOne(TableSchedules, uid, msg)
 	return err
 }
