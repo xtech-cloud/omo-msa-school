@@ -12,16 +12,9 @@ import (
 )
 
 const (
-	ClassActive ClassStatus = 0 // 在读
-	ClassFinish ClassStatus = 1 // 毕业
-)
-
-const (
 	ClassTypeDef     ClassType = 0 // 行政班
 	ClassTypeVirtual ClassType = 1 //虚拟班
 )
-
-type ClassStatus uint8
 
 type ClassType uint8
 
@@ -51,11 +44,11 @@ func (mine *ClassInfo) Grade() uint8 {
 	}
 }
 
-func (mine *ClassInfo) GetStatus() ClassStatus {
+func (mine *ClassInfo) GetStatus() StudentStatus {
 	if mine.Grade() > mine.maxGrade {
-		return ClassFinish
+		return StudentFinish
 	} else {
-		return ClassActive
+		return StudentActive
 	}
 }
 
@@ -401,11 +394,11 @@ func (mine *SchoolInfo) GetClassesByGrade(grade uint8) []*ClassInfo {
 	return list
 }
 
-func (mine *SchoolInfo) GetClasses(status ClassStatus) []*ClassInfo {
+func (mine *SchoolInfo) GetClasses(status StudentStatus) []*ClassInfo {
 	mine.initClasses()
 	list := make([]*ClassInfo, 0, 50)
 	for _, item := range mine.classes {
-		if status == ClassFinish && item.Grade() > mine.MaxGrade() {
+		if status == item.GetStatus() {
 			list = append(list, item)
 		} else {
 			list = append(list, item)
@@ -421,7 +414,7 @@ func (mine *SchoolInfo) GetClassesByPage(page, number uint32, st int32) (uint32,
 	}
 	var classes []*ClassInfo
 	if st > -1 {
-		classes = mine.GetClasses(ClassStatus(st))
+		classes = mine.GetClasses(StudentStatus(st))
 	} else {
 		classes = mine.classes
 	}

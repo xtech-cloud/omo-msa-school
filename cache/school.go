@@ -609,16 +609,20 @@ func (mine *SchoolInfo) GetStudentsByStatus(st StudentStatus) []*StudentInfo {
 	mine.initClasses()
 	list := make([]*StudentInfo, 0, 100)
 	for _, class := range mine.classes {
-		array := class.GetStudentsByStatus(st)
-		if len(array) > 0 {
-			for _, uid := range array {
-				if !mine.hadStudentIn(list, uid) {
-					info := mine.getStudent(uid)
-					if info != nil {
-						list = append(list, info)
+		if st != StudentAll && class.GetStatus() == st {
+			array := class.GetStudentsByStatus(st)
+			if len(array) > 0 {
+				for _, uid := range array {
+					if !mine.hadStudentIn(list, uid) {
+						info := mine.getStudent(uid)
+						if info != nil {
+							list = append(list, info)
+						}
 					}
 				}
 			}
+		} else {
+
 		}
 	}
 	return list
@@ -708,11 +712,11 @@ func (mine *SchoolInfo) GetPageStudentEntities(page, number uint32) (uint32, uin
 	return total, maxPage, list.([]*StudentInfo)
 }
 
-func (mine *SchoolInfo) GetActiveStudents(page, number uint32) (uint32, uint32, []*StudentInfo) {
+func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint32, uint32, []*StudentInfo) {
 	if number < 1 {
 		number = 10
 	}
-	all := mine.GetStudentsByStatus(StudentActive)
+	all := mine.GetStudentsByStatus(st)
 	if len(all) < 1 {
 		return 0, 0, make([]*StudentInfo, 0, 1)
 	}

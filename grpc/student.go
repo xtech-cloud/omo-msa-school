@@ -202,8 +202,13 @@ func (mine *StudentService) GetList(ctx context.Context, in *pb.RequestPage, out
 		if er == nil {
 			total, max, list = school.GetStudentsByType(in.Page, in.Number, cache.StudentStatus(tp))
 		}
+	} else if in.Filter == "status" {
+		st, er := strconv.ParseInt(in.Value, 10, 32)
+		if er == nil {
+			total, max, list = school.GetStudents(in.Page, in.Number, cache.StudentStatus(st))
+		}
 	} else {
-		total, max, list = school.GetActiveStudents(in.Page, in.Number)
+		total, max, list = school.GetStudents(in.Page, in.Number, cache.StudentActive)
 	}
 
 	out.List = make([]*pb.StudentInfo, 0, len(list))
