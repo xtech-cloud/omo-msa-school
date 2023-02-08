@@ -293,7 +293,7 @@ func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, str
 	list := make([]proxy.CustodianInfo, 0, 2)
 	if data.Custodians != nil {
 		for _, custodian := range data.Custodians {
-			if custodian.Name != "" {
+			if len(custodian.Phones) > 0 {
 				list = append(list, proxy.CustodianInfo{
 					Name:     custodian.Name,
 					Phones:   custodian.Phones,
