@@ -222,7 +222,7 @@ func (mine *cacheContext) createStudent(owner, name, sn, sid, operator string, e
 	if custodians != nil {
 		db.Custodians = make([]proxy.CustodianInfo, 0, len(custodians))
 		for _, custodian := range custodians {
-			if custodian.Name != "" {
+			if len(custodian.Phones) > 0 {
 				db.Custodians = append(db.Custodians, proxy.CustodianInfo{
 					Name:     custodian.Name,
 					Phones:   custodian.Phones,
