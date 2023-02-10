@@ -10,17 +10,18 @@ import (
 )
 
 const (
-	StudentDelete StudentStatus = 0 //管理员删除
-	StudentActive StudentStatus = 1 // 在读
-	StudentFinish StudentStatus = 2 // 毕业
-	StudentLeave  StudentStatus = 3 // 中途离开，转校
-	StudentAll StudentStatus = 99 //全部记录
+	StudentDelete  StudentStatus = 0  //管理员删除
+	StudentActive  StudentStatus = 1  // 在读
+	StudentFinish  StudentStatus = 2  // 毕业
+	StudentLeave   StudentStatus = 3  // 中途离开，转校
+	StudentUnknown StudentStatus = 4  // 未注册
+	StudentAll     StudentStatus = 99 //全部记录
 )
 
 type StudentStatus uint8
 
 type StudentInfo struct {
-	Sex uint8
+	Sex    uint8
 	Status uint8
 	baseInfo
 	Entity     string
@@ -53,7 +54,7 @@ func (mine *StudentInfo) initInfo(db *nosql.Student) {
 	mine.Custodians = db.Custodians
 	if mine.Custodians == nil {
 		mine.Custodians = make([]proxy.CustodianInfo, 0, 1)
-		_= nosql.UpdateStudentCustodians(mine.UID, mine.Operator, mine.Custodians)
+		_ = nosql.UpdateStudentCustodians(mine.UID, mine.Operator, mine.Custodians)
 	}
 }
 
@@ -87,7 +88,7 @@ func (mine *StudentInfo) UpdateCustodian(name, phones, identify string) error {
 }
 
 func (mine *StudentInfo) HadCustodian(phone string) bool {
-	if phone == ""{
+	if phone == "" {
 		return false
 	}
 	for _, custodian := range mine.Custodians {
@@ -99,7 +100,7 @@ func (mine *StudentInfo) HadCustodian(phone string) bool {
 }
 
 func (mine *StudentInfo) hadCustodian(name string) bool {
-	if name == ""{
+	if name == "" {
 		return false
 	}
 	for _, custodian := range mine.Custodians {
@@ -117,7 +118,7 @@ func (mine *StudentInfo) UpdateBase(name, sn, card, operator string, sex uint8, 
 		card = mine.IDCard
 	}
 	if card != mine.IDCard {
-		sid = "G"+card
+		sid = "G" + card
 	}
 	if name == "" {
 		name = mine.Name
@@ -126,12 +127,12 @@ func (mine *StudentInfo) UpdateBase(name, sn, card, operator string, sex uint8, 
 		if strings.Contains(mine.SN, "-") {
 			ar := strings.Split(mine.SN, "-")
 			if len(ar) > 2 {
-				sn = fmt.Sprintf("%s-%s-%s",ar[0], ar[1], sn)
+				sn = fmt.Sprintf("%s-%s-%s", ar[0], ar[1], sn)
 			}
-		}else{
+		} else {
 			class := cacheCtx.GetClassByStudent(mine.UID)
 			if class != nil {
-				sn = fmt.Sprintf("%d-%d-%s",class.EnrolDate.Year, class.Number, sn)
+				sn = fmt.Sprintf("%d-%d-%s", class.EnrolDate.Year, class.Number, sn)
 			}
 		}
 	}
@@ -148,7 +149,7 @@ func (mine *StudentInfo) UpdateBase(name, sn, card, operator string, sex uint8, 
 	return err
 }
 
-func (mine *StudentInfo) UpdateSelf(name, sn,card, operator string, sex uint8) error {
+func (mine *StudentInfo) UpdateSelf(name, sn, card, operator string, sex uint8) error {
 	var err error
 	err = nosql.UpdateStudentInfo(mine.UID, name, sn, card, operator, sex)
 	if err == nil {
@@ -205,8 +206,8 @@ func (mine *StudentInfo) Remove(operator string) bool {
 	return false
 }
 
-func (mine *StudentInfo)hadTag(tag string) bool {
-	if tag == ""{
+func (mine *StudentInfo) hadTag(tag string) bool {
+	if tag == "" {
 		return false
 	}
 	for _, s := range mine.Tags {
@@ -218,7 +219,7 @@ func (mine *StudentInfo)hadTag(tag string) bool {
 }
 
 func (mine *StudentInfo) appendTag(tag string) error {
-	if tag == ""{
+	if tag == "" {
 		return errors.New("the tag is empty")
 	}
 	if mine.hadTag(tag) {
@@ -232,7 +233,7 @@ func (mine *StudentInfo) appendTag(tag string) error {
 }
 
 func (mine *StudentInfo) subtractTag(tag string) error {
-	if tag == ""{
+	if tag == "" {
 		return errors.New("the tag is empty")
 	}
 	if !mine.hadTag(tag) {
@@ -240,7 +241,7 @@ func (mine *StudentInfo) subtractTag(tag string) error {
 	}
 	err := nosql.SubtractStudentTag(mine.UID, tag)
 	if err == nil {
-		for i := 0;i < len(mine.Tags);i += 1 {
+		for i := 0; i < len(mine.Tags); i += 1 {
 			if mine.Tags[i] == tag {
 				mine.Tags = append(mine.Tags[:i], mine.Tags[i+1:]...)
 				break

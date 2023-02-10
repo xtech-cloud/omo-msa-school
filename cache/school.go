@@ -608,21 +608,33 @@ func (mine *SchoolInfo) GetStudentsByStatus(st StudentStatus) []*StudentInfo {
 	mine.AllStudents()
 	mine.initClasses()
 	list := make([]*StudentInfo, 0, 100)
-	for _, class := range mine.classes {
-		if st != StudentAll && class.GetStatus() == st {
-			array := class.GetStudentsByStatus(st)
-			if len(array) > 0 {
-				for _, uid := range array {
-					if !mine.hadStudentIn(list, uid) {
-						info := mine.getStudent(uid)
-						if info != nil {
-							list = append(list, info)
+	if st == StudentUnknown {
+		arr, err := nosql.GetStudentsByStatus(mine.UID, uint32(st))
+		if err != nil {
+			return list
+		}
+		for _, db := range arr {
+			info := new(StudentInfo)
+			info.initInfo(db)
+			list = append(list, info)
+		}
+	} else {
+		for _, class := range mine.classes {
+			if st != StudentAll && class.GetStatus() == st {
+				array := class.GetStudentsByStatus(st)
+				if len(array) > 0 {
+					for _, uid := range array {
+						if !mine.hadStudentIn(list, uid) {
+							info := mine.getStudent(uid)
+							if info != nil {
+								list = append(list, info)
+							}
 						}
 					}
 				}
-			}
-		} else {
+			} else {
 
+			}
 		}
 	}
 	return list
