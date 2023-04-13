@@ -103,7 +103,7 @@ func GetTeachersBySchool(uid string) ([]*Teacher, error) {
 
 func GetLeaveTeachers(school string) ([]*Teacher, error) {
 	var items = make([]*Teacher, 0, 100)
-	filter := bson.M{"histories": bson.M{"school": school}}
+	filter := bson.M{"histories.school": school}
 	cursor, err1 := findMany(TableTeacher, filter, 0)
 	if err1 != nil {
 		return nil, err1
