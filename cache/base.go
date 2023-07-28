@@ -8,7 +8,6 @@ import (
 	"omo.msa.school/proxy"
 	"omo.msa.school/proxy/nosql"
 	"omo.msa.school/tool"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -44,7 +43,7 @@ func InitData() error {
 	if nil != err {
 		return err
 	}
-	checkSequences()
+	//checkSequences()
 	//num,_ := nosql.GetSchoolCount()
 	schools, _ := nosql.GetUsableSchools()
 	for _, school := range schools {
@@ -92,12 +91,17 @@ func checkSequences() {
 	}
 }
 
-func checkPage(page, number uint32, all interface{}) (uint32, uint32, interface{}) {
+func checkPage[T any](page, number uint32, all []T) (uint32, uint32, []T) {
+	if len(all) < 1 {
+		return 0, 0, make([]T, 0, 1)
+	}
 	if number < 1 {
 		number = 10
 	}
-	array := reflect.ValueOf(all)
-	total := uint32(array.Len())
+	total := uint32(len(all))
+	if len(all) <= int(number) {
+		return total, 1, all
+	}
 	maxPage := total/number + 1
 	if page < 1 {
 		return total, maxPage, all
@@ -108,12 +112,12 @@ func checkPage(page, number uint32, all interface{}) (uint32, uint32, interface{
 
 	var start = (page - 1) * number
 	var end = start + number
-	if end > total {
+	if end >= total {
 		end = total
 	}
-
-	list := array.Slice(int(start), int(end))
-	return total, maxPage, list.Interface()
+	list := make([]T, 0, number)
+	list = append(all[start:end])
+	return total, maxPage, list
 }
 
 func parseDate(date string) (time.Time, error) {
@@ -143,7 +147,7 @@ func (mine *cacheContext) AllSchools(page, number uint32) (uint32, uint32, []*Sc
 		return 0, 0, make([]*SchoolInfo, 0, 1)
 	}
 	total, max, list := checkPage(page, number, mine.schools)
-	return total, max, list.([]*SchoolInfo)
+	return total, max, list
 }
 
 func (mine *cacheContext) AllTeachers(page, number uint32) (uint32, uint32, []*TeacherInfo) {
@@ -154,7 +158,7 @@ func (mine *cacheContext) AllTeachers(page, number uint32) (uint32, uint32, []*T
 		return 0, 0, make([]*TeacherInfo, 0, 1)
 	}
 	total, max, list := checkPage(page, number, mine.teachers)
-	return total, max, list.([]*TeacherInfo)
+	return total, max, list
 }
 
 func parsePhones(phones string) []string {

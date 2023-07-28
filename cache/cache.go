@@ -43,7 +43,7 @@ func (mine *cacheContext) GetTeachersByPage(page, number uint32) (uint32, uint32
 		return 0, 0, make([]*TeacherInfo, 0, 1)
 	}
 	total, maxPage, list := checkPage(page, number, mine.teachers)
-	return total, maxPage, list.([]*TeacherInfo)
+	return total, maxPage, list
 }
 
 func (mine *cacheContext) createTeacher(name, operator, scene, entity, user string, classes, subs []string) (*TeacherInfo, error) {

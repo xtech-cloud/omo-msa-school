@@ -332,7 +332,7 @@ func (mine *SchoolInfo) GetTeachersByPage(page, number uint32) (uint32, uint32, 
 		return 0, 0, make([]*TeacherInfo, 0, 1)
 	}
 	total, maxPage, list := checkPage(page, number, teachers)
-	return total, maxPage, list.([]*TeacherInfo)
+	return total, maxPage, list
 }
 
 func (mine *SchoolInfo) RemoveTeacher(entity, remark string) error {

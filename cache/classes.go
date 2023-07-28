@@ -435,7 +435,7 @@ func (mine *SchoolInfo) GetClassesByPage(page, number uint32, st int32) (uint32,
 	//	}
 	//}
 	total, max, list := checkPage(page, number, mine.classes)
-	return total, max, list.([]*ClassInfo)
+	return total, max, list
 }
 
 func (mine *SchoolInfo) GetClass(uid string) *ClassInfo {

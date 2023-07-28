@@ -708,7 +708,7 @@ func (mine *SchoolInfo) GetPageStudents(page, number uint32) (uint32, uint32, []
 	}
 	total, maxPage, list := checkPage(page, number, all)
 
-	return total, maxPage, list.([]*StudentInfo)
+	return total, maxPage, list
 }
 
 func (mine *SchoolInfo) GetPageStudentEntities(page, number uint32) (uint32, uint32, []*StudentInfo) {
@@ -721,7 +721,7 @@ func (mine *SchoolInfo) GetPageStudentEntities(page, number uint32) (uint32, uin
 	}
 	total, maxPage, list := checkPage(page, number, all)
 
-	return total, maxPage, list.([]*StudentInfo)
+	return total, maxPage, list
 }
 
 func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint32, uint32, []*StudentInfo) {
@@ -734,7 +734,7 @@ func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint
 	}
 	total, maxPage, list := checkPage(page, number, all)
 
-	return total, maxPage, list.([]*StudentInfo)
+	return total, maxPage, list
 }
 
 func (mine *SchoolInfo) GetStudentsByType(page, number uint32, st StudentStatus) (uint32, uint32, []*StudentInfo) {
@@ -750,7 +750,7 @@ func (mine *SchoolInfo) GetStudentsByType(page, number uint32, st StudentStatus)
 	}
 	total, maxPage, arr := checkPage(page, number, list)
 
-	return total, maxPage, arr.([]*StudentInfo)
+	return total, maxPage, arr
 }
 
 //func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint32, uint32, []*StudentInfo) {
