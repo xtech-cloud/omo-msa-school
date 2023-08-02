@@ -7,6 +7,7 @@ import (
 	"omo.msa.school/proxy/nosql"
 	"omo.msa.school/tool"
 	"strings"
+	"time"
 )
 
 const (
@@ -29,6 +30,7 @@ type StudentInfo struct {
 	IDCard     string //身份证
 	SID        string //学籍号
 	School     string
+	Class      string
 	EnrolDate  proxy.DateInfo
 	Tags       []string
 	Custodians []proxy.CustodianInfo
@@ -176,6 +178,7 @@ func (mine *StudentInfo) UpdateTags(tags []string, operator string) error {
 	if err == nil {
 		mine.Tags = tags
 		mine.Operator = operator
+		mine.UpdateTime = time.Now()
 	}
 	return err
 }
@@ -185,6 +188,7 @@ func (mine *StudentInfo) UpdateStatus(st uint8, operator string) error {
 	if err == nil {
 		mine.Status = st
 		mine.Operator = operator
+		mine.UpdateTime = time.Now()
 	}
 	return err
 }
@@ -194,6 +198,7 @@ func (mine *StudentInfo) BindEntity(entity, operator string) error {
 	if err == nil {
 		mine.Entity = entity
 		mine.Operator = operator
+		mine.UpdateTime = time.Now()
 	}
 	return err
 }

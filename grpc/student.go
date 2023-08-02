@@ -28,7 +28,11 @@ func switchStudent(info *cache.StudentInfo, class string) *pb.StudentInfo {
 	tmp.Sid = info.SID
 	tmp.Status = uint32(info.Status)
 	tmp.Sex = uint32(info.Sex)
-	tmp.Class = class
+	if class == "" {
+		tmp.Class = info.Class
+	} else {
+		tmp.Class = class
+	}
 	tmp.School = info.School
 	tmp.Custodians = make([]*pb.CustodianInfo, 0, len(info.Custodians))
 	for _, custodian := range info.Custodians {

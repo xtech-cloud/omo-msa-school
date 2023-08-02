@@ -293,18 +293,16 @@ func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, str
 	list := make([]proxy.CustodianInfo, 0, 2)
 	if data.Custodians != nil {
 		for _, custodian := range data.Custodians {
-			if len(custodian.Phones) > 0 {
-				list = append(list, proxy.CustodianInfo{
-					Name:     custodian.Name,
-					Phones:   custodian.Phones,
-					Identity: custodian.Identify,
-				})
-			}
+			list = append(list, proxy.CustodianInfo{
+				Name:     custodian.Name,
+				Phones:   custodian.Phones,
+				Identity: custodian.Identify,
+			})
 		}
 	}
 	date := proxy.DateInfo{
 		Name:  fmt.Sprintf("%d-%d-%d", time.Now().Year(), time.January, 1),
-		Year:  0,
+		Year:  uint16(time.Now().Year()),
 		Month: time.January,
 		Day:   1,
 	}
@@ -620,20 +618,31 @@ func (mine *SchoolInfo) GetStudentsByStatus(st StudentStatus) []*StudentInfo {
 		}
 	} else {
 		for _, class := range mine.classes {
-			if st != StudentAll && class.GetStatus() == st {
-				array := class.GetStudentsByStatus(st)
-				if len(array) > 0 {
-					for _, uid := range array {
-						if !mine.hadStudentIn(list, uid) {
-							info := mine.getStudent(uid)
-							if info != nil {
-								list = append(list, info)
-							}
-						}
+			var array []string
+			if st == StudentAll {
+				array = class.GetStudents()
+			} else if st == StudentLeave {
+				array = class.GetStudentsByStatus(st)
+			} else {
+				stat := class.GetStatus()
+				if stat == st {
+					if st == StudentActive {
+						array = class.GetStudentsByStatus(st)
+					} else {
+						array = class.GetStudents()
+					}
+				} else {
+
+				}
+			}
+			for _, uid := range array {
+				if !mine.hadStudentIn(list, uid) {
+					info := mine.getStudent(uid)
+					if info != nil {
+						info.Class = class.UID
+						list = append(list, info)
 					}
 				}
-			} else {
-
 			}
 		}
 	}

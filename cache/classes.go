@@ -197,6 +197,14 @@ func (mine *ClassInfo) GetStudentsByStatus(st StudentStatus) []string {
 	return list
 }
 
+func (mine *ClassInfo) GetStudents() []string {
+	list := make([]string, 0, len(mine.Members))
+	for _, item := range mine.Members {
+		list = append(list, item.Student)
+	}
+	return list
+}
+
 func (mine *ClassInfo) HadStudent(uid string) bool {
 	if uid == "" {
 		return false
