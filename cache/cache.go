@@ -275,7 +275,7 @@ func (mine *cacheContext) GetStudentsByIDCard(card, phone string) []*StudentInfo
 	return list
 }
 
-func (mine *cacheContext) GetStudentsByCustodian(phone string) []*StudentInfo {
+func (mine *cacheContext) GetStudentsByCustodian(phone, name string) []*StudentInfo {
 	list := make([]*StudentInfo, 0, 2)
 	if phone == "" {
 		return list
@@ -284,10 +284,18 @@ func (mine *cacheContext) GetStudentsByCustodian(phone string) []*StudentInfo {
 	if err != nil {
 		return list
 	}
-	for _, student := range array {
-		info := new(StudentInfo)
-		info.initInfo(student)
-		list = append(list, info)
+	for _, db := range array {
+		if name == "" {
+			info := new(StudentInfo)
+			info.initInfo(db)
+			list = append(list, info)
+		} else {
+			if db.Name == name {
+				info := new(StudentInfo)
+				info.initInfo(db)
+				list = append(list, info)
+			}
+		}
 	}
 	return list
 }

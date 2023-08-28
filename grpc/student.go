@@ -130,7 +130,7 @@ func (mine *StudentService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 			return nil
 		}
 		if in.Filter == "custodian" {
-			list = school.GetStudentsByCustodian(in.Value)
+			list = school.GetStudentsByCustodian(in.Value, in.Params)
 		} else if in.Filter == "card" {
 			student := school.GetStudentByCard(in.Value)
 			if student != nil {
@@ -172,7 +172,7 @@ func (mine *StudentService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 				list = cache.Context().GetStudentsByIDCard(in.Value, in.Params)
 			}
 		} else if in.Filter == "custodian" {
-			list = cache.Context().GetStudentsByCustodian(in.Value)
+			list = cache.Context().GetStudentsByCustodian(in.Value, in.Params)
 		}
 	}
 	out.List = make([]*pb.StudentInfo, 0, len(list))
