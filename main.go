@@ -7,6 +7,7 @@ import (
 	"github.com/micro/go-micro/v2/logger"
 	_ "github.com/micro/go-plugins/registry/consul/v2"
 	_ "github.com/micro/go-plugins/registry/etcdv3/v2"
+	"github.com/robfig/cron/v3"
 	proto "github.com/xtech-cloud/omo-msp-school/proto/school"
 	"io"
 	"omo.msa.school/cache"
@@ -48,6 +49,8 @@ func main() {
 	_ = proto.RegisterLessonServiceHandler(service.Server(), new(grpc.LessonService))
 	_ = proto.RegisterScheduleServiceHandler(service.Server(), new(grpc.ScheduleService))
 
+	go checkTimer()
+
 	app, _ := filepath.Abs(os.Args[0])
 
 	logger.Info("-------------------------------------------------------------")
@@ -63,6 +66,20 @@ func main() {
 	if err := service.Run(); err != nil {
 		logger.Fatal(err)
 	}
+}
+
+func checkTimer() {
+	time.Sleep(time.Second * 5)
+	cache.Context().CheckStudentFinish()
+	cli := cron.New()
+	_, er := cli.AddFunc("1 22 1 * *", func() {
+		cache.Context().CheckStudentFinish()
+	})
+	if er != nil {
+		logger.Warn("start cron failed that err = " + er.Error())
+		return
+	}
+	cli.Start()
 }
 
 func md5hex(_file string) string {

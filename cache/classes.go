@@ -32,16 +32,7 @@ type ClassInfo struct {
 }
 
 func (mine *ClassInfo) Grade() uint8 {
-	now := time.Now()
-	diff := now.Year() - int(mine.EnrolDate.Year)
-	if now.Month() > time.Month(7) {
-		return uint8(diff + 1)
-	} else {
-		if diff < 1 {
-			return 1
-		}
-		return uint8(diff)
-	}
+	return calculateGrade(mine.EnrolDate)
 }
 
 func (mine *ClassInfo) GetStatus() StudentStatus {
@@ -309,33 +300,43 @@ func (mine *ClassInfo) RemoveStudent(uid, remark string, id uint64, st StudentSt
 //region Class Fun
 func (mine *SchoolInfo) CreateClasses(name, enrol, operator string, number, kind uint16) ([]*ClassInfo, error) {
 	mine.initClasses()
-	if number < 1 {
-		return nil, errors.New("the number must not more than 0")
+	if number < 0 {
+		return nil, errors.New("the number must not more than -1")
 	}
 	date := new(proxy.DateInfo)
 	err := date.Parse(enrol)
 	if err != nil {
 		return nil, err
 	}
-	list := mine.GetClassesByEnrol(date.Year, date.Month)
-	array := make([]*ClassInfo, 0, number)
-	count := len(list)
-	var length int = int(number)
-	if count > 0 {
-		diff := int(number) - count
-		if diff < 1 {
-			diff = 0
-			array = list
-			// return nil,errors.New("the class had existed")
-		}
-		length = diff
-	}
-	for i := 0; i < length; i += 1 {
-		info, _ := mine.createClass(name, enrol, operator, uint16(i+count+1), kind)
+	var array []*ClassInfo
+	if number == 0 {
+		array = make([]*ClassInfo, 0, 1)
+		info, _ := mine.createClass(name, enrol, operator, 0, kind)
 		if info != nil {
 			array = append(array, info)
 		}
+	} else {
+		list := mine.GetClassesByEnrol(date.Year, date.Month)
+		array = make([]*ClassInfo, 0, number)
+		count := len(list)
+		var length int = int(number)
+		if count > 0 {
+			diff := int(number) - count
+			if diff < 1 {
+				diff = 0
+				array = list
+				// return nil,errors.New("the class had existed")
+			}
+			length = diff
+		}
+		for i := 0; i < length; i += 1 {
+			info, _ := mine.createClass(name, enrol, operator, uint16(i+count+1), kind)
+			if info != nil {
+				array = append(array, info)
+			}
+		}
 	}
+
 	return array, nil
 }
 
@@ -384,7 +385,7 @@ func (mine *SchoolInfo) GetClassesByEnrol(year uint16, month time.Month) []*Clas
 	mine.initClasses()
 	list := make([]*ClassInfo, 0, 10)
 	for _, item := range mine.classes {
-		if item.EnrolDate.Year == year && item.EnrolDate.Month == month {
+		if item.EnrolDate.Equal(year, month) {
 			list = append(list, item)
 		}
 	}

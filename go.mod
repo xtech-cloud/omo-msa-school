@@ -11,6 +11,7 @@ require (
 	github.com/micro/go-plugins/logger/logrus/v2 v2.9.1
 	github.com/micro/go-plugins/registry/consul/v2 v2.9.1
 	github.com/micro/go-plugins/registry/etcdv3/v2 v2.9.1
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/tidwall/gjson v1.6.0

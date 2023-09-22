@@ -6,6 +6,7 @@ import (
 	pb "github.com/xtech-cloud/omo-msp-school/proto/school"
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.school/cache"
+	"omo.msa.school/proxy"
 	"strconv"
 )
 
@@ -38,13 +39,13 @@ func switchClass(info *cache.ClassInfo) *pb.ClassInfo {
 func (mine *ClassService) AddOne(ctx context.Context, in *pb.ReqClassAdd, out *pb.ReplyClassList) error {
 	path := "class.addOne"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolScene(in.Scene)
+	school, _ := cache.Context().GetSchoolBy(in.Scene)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
-	list, err1 := school.CreateClasses(in.Name, in.Enrol, in.Operator, uint16(in.Count), 0)
+	list, err1 := school.CreateClasses(in.Name, in.Enrol, in.Operator, uint16(in.Count), uint16(in.Type))
 	if err1 != nil {
 		out.Status = outError(path, err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -62,13 +63,8 @@ func (mine *ClassService) AddOne(ctx context.Context, in *pb.ReqClassAdd, out *p
 func (mine *ClassService) GetOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyClassInfo) error {
 	path := "class.getOne"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Parent)
-	if school == nil {
-		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
-		return nil
-	}
 
-	info := school.GetClass(in.Uid)
+	info := cache.Context().GetClass(in.Uid)
 	if info == nil {
 		out.Status = outError(path, "not found the class", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -82,7 +78,7 @@ func (mine *ClassService) GetOne(ctx context.Context, in *pb.RequestInfo, out *p
 func (mine *ClassService) GetList(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyClassList) error {
 	path := "class.getList"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Parent)
+	school, _ := cache.Context().GetSchoolBy(in.Parent)
 	if school == nil {
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -129,7 +125,7 @@ func (mine *ClassService) GetByFilter(ctx context.Context, in *pb.RequestPage, o
 	if in.Parent == "" {
 
 	} else {
-		school, _ := cache.Context().GetSchoolByUID(in.Parent)
+		school, _ := cache.Context().GetSchoolBy(in.Parent)
 		if school == nil {
 			out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 			return nil
@@ -148,6 +144,14 @@ func (mine *ClassService) GetByFilter(ctx context.Context, in *pb.RequestPage, o
 			classes = school.GetClassesByTeacher(in.Value)
 		} else if in.Filter == "assistant" {
 			classes = school.GetClassesByAssistant(in.Value)
+		} else if in.Filter == "enrol" {
+			date := new(proxy.DateInfo)
+			err := date.Parse(in.Value)
+			if err != nil {
+				out.Status = outError(path, err.Error(), pbstatus.ResultStatus_FormatError)
+				return nil
+			}
+			classes = school.GetClassesByEnrol(date.Year, date.Month)
 		}
 		for _, class := range classes {
 			out.List = append(out.List, switchClass(class))
@@ -168,7 +172,7 @@ func (mine *ClassService) GetStatistic(ctx context.Context, in *pb.RequestPage, 
 func (mine *ClassService) UpdateOne(ctx context.Context, in *pb.ReqClassUpdate, out *pb.ReplyClassInfo) error {
 	path := "class.updateOne"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Parent)
+	school, _ := cache.Context().GetSchoolBy(in.Parent)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -192,7 +196,7 @@ func (mine *ClassService) UpdateOne(ctx context.Context, in *pb.ReqClassUpdate, 
 func (mine *ClassService) SetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyClassInfo) error {
 	path := "class.setByFilter"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Parent)
+	school, _ := cache.Context().GetSchoolBy(in.Parent)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -212,7 +216,7 @@ func (mine *ClassService) SetByFilter(ctx context.Context, in *pb.RequestPage, o
 func (mine *ClassService) RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
 	path := "class.removeOne"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Parent)
+	school, _ := cache.Context().GetSchoolBy(in.Parent)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -231,7 +235,7 @@ func (mine *ClassService) RemoveOne(ctx context.Context, in *pb.RequestInfo, out
 func (mine *ClassService) SetMaster(ctx context.Context, in *pb.ReqClassMaster, out *pb.ReplyInfo) error {
 	path := "class.setMaster"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Parent)
+	school, _ := cache.Context().GetSchoolBy(in.Parent)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -263,7 +267,7 @@ func (mine *ClassService) SetMaster(ctx context.Context, in *pb.ReqClassMaster, 
 func (mine *ClassService) SetAssistant(ctx context.Context, in *pb.ReqClassMaster, out *pb.ReplyInfo) error {
 	path := "class.setAssistant"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Parent)
+	school, _ := cache.Context().GetSchoolBy(in.Parent)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -287,7 +291,7 @@ func (mine *ClassService) SetAssistant(ctx context.Context, in *pb.ReqClassMaste
 func (mine *ClassService) AppendStudent(ctx context.Context, in *pb.ReqClassStudent, out *pb.ReplyClassStudents) error {
 	path := "class.appendStudent"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Parent)
+	school, _ := cache.Context().GetSchoolBy(in.Parent)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -322,7 +326,7 @@ func (mine *ClassService) AppendStudent(ctx context.Context, in *pb.ReqClassStud
 func (mine *ClassService) SubtractStudent(ctx context.Context, in *pb.ReqClassStudent, out *pb.ReplyClassStudents) error {
 	path := "class.subtractStudent"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Parent)
+	school, _ := cache.Context().GetSchoolBy(in.Parent)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -343,7 +347,7 @@ func (mine *ClassService) SubtractStudent(ctx context.Context, in *pb.ReqClassSt
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
-	_ = student.UpdateStatus(uint8(cache.StudentLeave), in.Operator)
+	_ = student.UpdateStatus(cache.StudentLeave, in.Operator)
 	out.Students = make([]*pb.MemberInfo, 0, len(class.Members))
 	for _, member := range class.Members {
 		out.Students = append(out.Students, &pb.MemberInfo{Uid: member.UID, Student: member.Student, Status: uint32(member.Status), Remark: member.Remark})
@@ -355,7 +359,7 @@ func (mine *ClassService) SubtractStudent(ctx context.Context, in *pb.ReqClassSt
 func (mine *ClassService) AppendTeacher(ctx context.Context, in *pb.ReqClassTeacher, out *pb.ReplyList) error {
 	path := "class.appendTeacher"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.School)
+	school, _ := cache.Context().GetSchoolBy(in.School)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -379,7 +383,7 @@ func (mine *ClassService) AppendTeacher(ctx context.Context, in *pb.ReqClassTeac
 func (mine *ClassService) SubtractTeacher(ctx context.Context, in *pb.ReqClassTeacher, out *pb.ReplyList) error {
 	path := "class.subtractTeacher"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.School)
+	school, _ := cache.Context().GetSchoolBy(in.School)
 	if school == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil

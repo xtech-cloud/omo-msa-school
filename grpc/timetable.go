@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type TimetableService struct {}
+type TimetableService struct{}
 
 func switchTimetable(info *cache.TimetableInfo) *pb.TimetableInfo {
 	tmp := new(pb.TimetableInfo)
@@ -55,16 +55,16 @@ func checkTimetable(arr []*cache.TimetableInfo, school, class string, year uint3
 	return arr, tmp
 }
 
-func (mine *TimetableService)AddOne(ctx context.Context, in *pb.ReqTimetableAdd, out *pb.ReplyTimetableInfo) error {
+func (mine *TimetableService) AddOne(ctx context.Context, in *pb.ReqTimetableAdd, out *pb.ReplyTimetableInfo) error {
 	path := "timetable.addOne"
 	inLog(path, in)
 	if in.Year < 2020 {
-		out.Status = outError(path,"the year must later than 2020", pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path, "the year must later than 2020", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	school,_ := cache.Context().GetSchoolByUID(in.School)
+	school, _ := cache.Context().GetSchoolBy(in.School)
 	if school == nil {
-		out.Status = outError(path,"not found the school by uid", pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	arr := make([]proxy.TimetableItem, 0, 35)
@@ -75,7 +75,7 @@ func (mine *TimetableService)AddOne(ctx context.Context, in *pb.ReqTimetableAdd,
 	}
 	info, err1 := school.CreateTimetable(in.Class, in.Operator, in.Year, arr)
 	if err1 != nil {
-		out.Status = outError(path,err1.Error(), pbstatus.ResultStatus_DBException)
+		out.Status = outError(path, err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.Info = switchTimetable(info)
@@ -83,16 +83,16 @@ func (mine *TimetableService)AddOne(ctx context.Context, in *pb.ReqTimetableAdd,
 	return nil
 }
 
-func (mine *TimetableService)AddBatch(ctx context.Context, in *pb.ReqTimetableBatch, out *pb.ReplyTimetableList) error {
+func (mine *TimetableService) AddBatch(ctx context.Context, in *pb.ReqTimetableBatch, out *pb.ReplyTimetableList) error {
 	path := "timetable.addBatch"
 	inLog(path, in)
 	if in.Year < 2020 {
-		out.Status = outError(path,"the year must later than 2020", pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path, "the year must later than 2020", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	school,err := cache.Context().GetSchoolByUID(in.School)
+	school, err := cache.Context().GetSchoolBy(in.School)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 
@@ -104,13 +104,13 @@ func (mine *TimetableService)AddBatch(ctx context.Context, in *pb.ReqTimetableBa
 	}
 	out.List = make([]*pb.TimetableInfo, 0, len(arr))
 	for _, tmp := range arr {
-		table,_ := school.GetTimetable(tmp.Class, in.Year)
+		table, _ := school.GetTimetable(tmp.Class, in.Year)
 		if table == nil {
 			info, er := school.CreateTimetable(tmp.Class, in.Operator, in.Year, tmp.Items)
 			if er == nil {
 				out.List = append(out.List, switchTimetable(info))
 			}
-		}else{
+		} else {
 			er := table.UpdateItems(in.Operator, tmp.Items)
 			if er == nil {
 				out.List = append(out.List, switchTimetable(table))
@@ -122,23 +122,23 @@ func (mine *TimetableService)AddBatch(ctx context.Context, in *pb.ReqTimetableBa
 	return nil
 }
 
-func (mine *TimetableService)GetList(ctx context.Context, in *pb.RequestPage, out *pb.ReplyTimetableList) error {
+func (mine *TimetableService) GetList(ctx context.Context, in *pb.RequestPage, out *pb.ReplyTimetableList) error {
 	path := "timetable.getList"
 	inLog(path, in)
 
-	school,err := cache.Context().GetSchoolByUID(in.Parent)
+	school, err := cache.Context().GetSchoolBy(in.Parent)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	year,err := strconv.ParseUint(in.Value, 10, 32)
+	year, err := strconv.ParseUint(in.Value, 10, 32)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_FormatError)
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_FormatError)
 		return nil
 	}
 	list, err1 := school.GetTimetablesBy(uint32(year))
 	if err1 != nil {
-		out.Status = outError(path,err1.Error(), pbstatus.ResultStatus_DBException)
+		out.Status = outError(path, err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
 	out.List = make([]*pb.TimetableInfo, 0, len(list))
@@ -149,26 +149,26 @@ func (mine *TimetableService)GetList(ctx context.Context, in *pb.RequestPage, ou
 	return nil
 }
 
-func (mine *TimetableService)GetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyTimetableList) error {
+func (mine *TimetableService) GetByFilter(ctx context.Context, in *pb.RequestPage, out *pb.ReplyTimetableList) error {
 	path := "timetable.getByFilter"
 	inLog(path, in)
 	if in.Number < 10 {
 		in.Number = 10
 	}
-	school,err := cache.Context().GetSchoolByUID(in.Parent)
+	school, err := cache.Context().GetSchoolBy(in.Parent)
 	if err != nil {
-		out.Status = outError(path,err.Error(), pbstatus.ResultStatus_NotExisted)
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
 	if in.Filter == "class" {
-		year,er := strconv.ParseUint(in.Params, 10, 32)
+		year, er := strconv.ParseUint(in.Params, 10, 32)
 		if er != nil {
-			out.Status = outError(path,er.Error(), pbstatus.ResultStatus_FormatError)
+			out.Status = outError(path, er.Error(), pbstatus.ResultStatus_FormatError)
 			return nil
 		}
-		tmp,er := school.GetTimetable(in.Value, uint32(year))
+		tmp, er := school.GetTimetable(in.Value, uint32(year))
 		if er != nil {
-			out.Status = outError(path,er.Error(), pbstatus.ResultStatus_FormatError)
+			out.Status = outError(path, er.Error(), pbstatus.ResultStatus_FormatError)
 			return nil
 		}
 		out.List = make([]*pb.TimetableInfo, 0, 1)
@@ -179,7 +179,7 @@ func (mine *TimetableService)GetByFilter(ctx context.Context, in *pb.RequestPage
 	return nil
 }
 
-func (mine *TimetableService)GetStatistic(ctx context.Context, in *pb.RequestPage, out *pb.ReplyStatistic) error {
+func (mine *TimetableService) GetStatistic(ctx context.Context, in *pb.RequestPage, out *pb.ReplyStatistic) error {
 	path := "timetable.getStatistic"
 	inLog(path, in)
 
@@ -187,7 +187,7 @@ func (mine *TimetableService)GetStatistic(ctx context.Context, in *pb.RequestPag
 	return nil
 }
 
-func (mine *TimetableService)RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
+func (mine *TimetableService) RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
 	path := "timetable.removeOne"
 	inLog(path, in)
 

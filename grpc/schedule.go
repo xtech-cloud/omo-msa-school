@@ -42,7 +42,7 @@ func switchSchedule(info *cache.ScheduleInfo) *pb.ScheduleInfo {
 func (mine *ScheduleService) AddOne(ctx context.Context, in *pb.ReqScheduleAdd, out *pb.ReplyScheduleInfo) error {
 	path := "schedule.addOne"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolScene(in.Scene)
+	school, _ := cache.Context().GetSchoolBy(in.Scene)
 	if school == nil {
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -64,7 +64,7 @@ func (mine *ScheduleService) GetOne(ctx context.Context, in *pb.RequestInfo, out
 	var info *cache.ScheduleInfo
 	var err error
 	if len(in.Parent) > 1 {
-		scene, er := cache.Context().GetSchoolScene(in.Parent)
+		scene, er := cache.Context().GetSchoolBy(in.Parent)
 		if er != nil {
 			out.Status = outError(path, er.Error(), pbstatus.ResultStatus_NotExisted)
 			return nil
@@ -93,7 +93,7 @@ func (mine *ScheduleService) GetByFilter(ctx context.Context, in *pb.RequestPage
 	}
 	var err error
 	var list []*cache.ScheduleInfo
-	scene, er := cache.Context().GetSchoolScene(in.Parent)
+	scene, er := cache.Context().GetSchoolBy(in.Parent)
 	if er != nil {
 		out.Status = outError(path, er.Error(), pbstatus.ResultStatus_NotExisted)
 		return nil

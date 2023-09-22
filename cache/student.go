@@ -23,7 +23,7 @@ type StudentStatus uint8
 
 type StudentInfo struct {
 	Sex    uint8
-	Status uint8
+	Status StudentStatus
 	baseInfo
 	Entity     string
 	SN         string //学号
@@ -52,7 +52,7 @@ func (mine *StudentInfo) initInfo(db *nosql.Student) {
 	mine.IDCard = db.IDCard
 	mine.EnrolDate = db.EnrolDate
 	mine.School = db.School
-	mine.Status = db.Status
+	mine.Status = StudentStatus(db.Status)
 	mine.Custodians = db.Custodians
 	if mine.Custodians == nil {
 		mine.Custodians = make([]proxy.CustodianInfo, 0, 1)
@@ -111,6 +111,10 @@ func (mine *StudentInfo) hadCustodian(name string) bool {
 		}
 	}
 	return false
+}
+
+func (mine *StudentInfo) Grade() uint8 {
+	return calculateGrade(mine.EnrolDate)
 }
 
 func (mine *StudentInfo) UpdateBase(name, sn, card, operator string, sex uint8, arr []proxy.CustodianInfo) error {
@@ -183,8 +187,11 @@ func (mine *StudentInfo) UpdateTags(tags []string, operator string) error {
 	return err
 }
 
-func (mine *StudentInfo) UpdateStatus(st uint8, operator string) error {
-	err := nosql.UpdateStudentState(mine.UID, operator, st)
+func (mine *StudentInfo) UpdateStatus(st StudentStatus, operator string) error {
+	if mine.Status == st {
+		return nil
+	}
+	err := nosql.UpdateStudentState(mine.UID, operator, uint8(st))
 	if err == nil {
 		mine.Status = st
 		mine.Operator = operator
@@ -194,6 +201,15 @@ func (mine *StudentInfo) UpdateStatus(st uint8, operator string) error {
 }
 
 func (mine *StudentInfo) BindEntity(entity, operator string) error {
+	if entity == "" {
+		return errors.New("the entity is empty")
+	}
+	if mine.Entity != "" {
+		return errors.New("the entity has existed")
+	}
+	if mine.Entity == entity {
+		return nil
+	}
 	err := nosql.UpdateStudentEntity(mine.UID, entity, operator)
 	if err == nil {
 		mine.Entity = entity

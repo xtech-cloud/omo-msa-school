@@ -32,7 +32,7 @@ func switchLesson(info *cache.LessonInfo) *pb.LessonInfo {
 func (mine *LessonService) AddOne(ctx context.Context, in *pb.ReqLessonAdd, out *pb.ReplyLessonInfo) error {
 	path := "lesson.addOne"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolScene(in.Scene)
+	school, _ := cache.Context().GetSchoolBy(in.Scene)
 	if school == nil {
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -55,7 +55,7 @@ func (mine *LessonService) GetOne(ctx context.Context, in *pb.RequestInfo, out *
 	var info *cache.LessonInfo
 	var er error
 	if len(in.Parent) > 1 {
-		scene, err := cache.Context().GetSchoolByUID(in.Parent)
+		scene, err := cache.Context().GetSchoolBy(in.Parent)
 		if err != nil {
 			out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
 			return nil

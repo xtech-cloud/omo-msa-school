@@ -196,7 +196,7 @@ func (mine *cacheContext) CheckTeacher(entity string) *SchoolInfo {
 	return nil
 }
 
-func (mine *cacheContext) createStudent(owner, name, sn, sid, operator string, enrol proxy.DateInfo, sex, st uint8, custodians []proxy.CustodianInfo) (*StudentInfo, error) {
+func (mine *cacheContext) createStudent(owner, name, sn, sid, operator string, enrol proxy.DateInfo, sex uint8, st StudentStatus, custodians []proxy.CustodianInfo) (*StudentInfo, error) {
 	db := new(nosql.Student)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetStudentNextID()
@@ -206,9 +206,11 @@ func (mine *cacheContext) createStudent(owner, name, sn, sid, operator string, e
 	db.Creator = operator
 	db.EnrolDate = enrol
 	db.School = owner
-	db.Status = st
 	db.Tags = make([]string, 0, 1)
-
+	if st == StudentDelete {
+		st = StudentActive
+	}
+	db.Status = uint8(st)
 	db.Sex = sex
 	db.SN = sn
 	if len(sid) == 19 {
@@ -368,4 +370,18 @@ func (mine *cacheContext) GetStudents(array []string) []*StudentInfo {
 		}
 	}
 	return list
+}
+
+func (mine *cacheContext) CheckStudentFinish() {
+	dbs, _ := nosql.GetAllStudentsByStatus(uint32(StudentActive))
+	for _, db := range dbs {
+		student := new(StudentInfo)
+		student.initInfo(db)
+		school, _ := mine.GetSchoolBy(student.School)
+		if school != nil {
+			if student.Grade() > school.maxGrade {
+				_ = student.UpdateStatus(StudentFinish, student.Operator)
+			}
+		}
+	}
 }

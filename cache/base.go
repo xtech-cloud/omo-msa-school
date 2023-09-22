@@ -131,6 +131,19 @@ func parseDate(date string) (time.Time, error) {
 	return f, nil
 }
 
+func calculateGrade(enrol proxy.DateInfo) uint8 {
+	now := time.Now()
+	diff := now.Year() - int(enrol.Year)
+	if now.Month() > time.Month(7) {
+		return uint8(diff + 1)
+	} else {
+		if diff < 1 {
+			return 1
+		}
+		return uint8(diff)
+	}
+}
+
 func (mine *cacheContext) AllSchools(page, number uint32) (uint32, uint32, []*SchoolInfo) {
 	if len(mine.schools) < 1 {
 		schools, _ := nosql.GetUsableSchools()
@@ -208,18 +221,18 @@ func (mine *cacheContext) CreateSchool(name, entity, scene string, maxGrade int)
 	}
 }
 
-func (mine *cacheContext) GetSchoolByUID(uid string) (*SchoolInfo, error) {
+func (mine *cacheContext) GetSchoolBy(uid string) (*SchoolInfo, error) {
 	if len(uid) < 1 {
 		return nil, errors.New("the school uid is empty")
 	}
 	for i := 0; i < len(mine.schools); i += 1 {
-		if mine.schools[i].UID == uid {
+		if mine.schools[i].UID == uid || mine.schools[i].Scene == uid {
 			return mine.schools[i], nil
 		}
 	}
 	db, _ := nosql.GetSchool(uid)
 	if db == nil {
-		return mine.GetSchoolScene(uid)
+		return mine.getSchoolScene(uid)
 	}
 	school := new(SchoolInfo)
 	school.initInfo(db)
@@ -227,7 +240,7 @@ func (mine *cacheContext) GetSchoolByUID(uid string) (*SchoolInfo, error) {
 	return school, nil
 }
 
-func (mine *cacheContext) GetSchoolScene(scene string) (*SchoolInfo, error) {
+func (mine *cacheContext) getSchoolScene(scene string) (*SchoolInfo, error) {
 	if scene == "" {
 		return nil, errors.New("the school uid is empty")
 	}
@@ -300,7 +313,7 @@ func (mine *cacheContext) GetSchoolByClass(class string) *SchoolInfo {
 	if db == nil {
 		return nil
 	}
-	tmp, _ := mine.GetSchoolByUID(db.School)
+	tmp, _ := mine.GetSchoolBy(db.School)
 	return tmp
 }
 
@@ -316,35 +329,33 @@ func (mine *cacheContext) GetSchoolByStudent(student string, st StudentStatus) *
 	return nil
 }
 
-func (mine *cacheContext) GetSchoolByStudent2(student string) *SchoolInfo {
+func (mine *cacheContext) GetSchoolByStudent2(student string) (*SchoolInfo, error) {
 	if student == "" {
-		return nil
+		return nil, errors.New("the student uid is empty")
 	}
-	for i := 0; i < len(mine.schools); i += 1 {
-		if mine.schools[i].hadStudent(student) {
-			return mine.schools[i]
-		}
+	db, err := nosql.GetStudent(student)
+	if db != nil {
+		return mine.GetSchoolBy(db.School)
 	}
-	return nil
+
+	return nil, err
 }
 
-func (mine *cacheContext) GetSchoolsByStudentEntity(entity string) ([]*SchoolInfo, []*ClassInfo) {
-	list := make([]*SchoolInfo, 0, 5)
-	classes := make([]*ClassInfo, 0, 10)
+func (mine *cacheContext) GetSchoolsByStudentEntity(entity string) []*SchoolInfo {
 	if entity == "" {
-		return list, classes
+		return nil
 	}
-	for i := 0; i < len(mine.schools); i += 1 {
-		stu := mine.schools[i].getStudentByEntity(entity)
-		if stu != nil {
-			list = append(list, mine.schools[i])
-			class := mine.schools[i].GetClassByStudent(stu.UID, StudentActive)
-			if class != nil {
-				classes = append(classes, class)
-			}
+
+	dbs, _ := nosql.GetStudentsByEntity(entity)
+	list := make([]*SchoolInfo, 0, len(dbs))
+	for _, db := range dbs {
+		info, _ := mine.GetSchoolBy(db.School)
+		if info != nil {
+			list = append(list, info)
 		}
 	}
-	return list, classes
+
+	return list
 }
 
 func (mine *cacheContext) GetSchoolByTeacher(uid string) *SchoolInfo {

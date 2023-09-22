@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.school/proxy"
 	"omo.msa.school/proxy/nosql"
+	"omo.msa.school/tool"
+	"strconv"
 	"time"
 )
 
@@ -306,7 +308,7 @@ func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, str
 		Month: time.January,
 		Day:   1,
 	}
-	student, err := cacheCtx.createStudent(mine.UID, data.Name, data.Sn, data.Card, data.Operator, date, uint8(data.Sex), uint8(data.Status), list)
+	student, err := cacheCtx.createStudent(mine.UID, data.Name, data.Sn, data.Card, data.Operator, date, uint8(data.Sex), StudentStatus(data.Status), list)
 	if err != nil {
 		return nil, "", err
 	}
@@ -315,6 +317,9 @@ func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, str
 	if class != nil {
 		_ = class.AddStudent(student)
 		_ = student.UpdateEnrol(class.EnrolDate, data.Operator)
+	}
+	if len(data.Entity) > 0 {
+		_ = student.BindEntity(data.Entity, data.Operator)
 	}
 	return student, data.Class, nil
 }
@@ -403,6 +408,54 @@ func (mine *SchoolInfo) GetStudentsByEnrol(enrol string) []*StudentInfo {
 	return list
 }
 
+func (mine *SchoolInfo) GetBindStudents(grades []string) []*StudentInfo {
+	list := make([]*StudentInfo, 0, 2)
+	max := int(mine.maxGrade)
+	if max == 0 {
+		max = 6
+	}
+	now := time.Now()
+	year := now.Year() - max
+	month := 8
+	if now.Month() >= 8 {
+		year += 1
+	}
+	array, err := nosql.GetStudentsByYear(mine.UID, year, month)
+	if err != nil {
+		return list
+	}
+	length := len(grades)
+	had := false
+	if length == 0 {
+		had = true
+	} else if length == 1 {
+		if grades[0] == mine.Scene {
+			had = true
+		}
+	}
+	for _, student := range array {
+		grade := calculateGrade(student.EnrolDate)
+		if length > 1 && tool.HasItem(grades, strconv.Itoa(int(grade))) {
+			had = true
+		}
+		if studentAlive(student) && had {
+			info := new(StudentInfo)
+			info.initInfo(student)
+			list = append(list, info)
+		}
+	}
+	return list
+}
+
+func studentAlive(db *nosql.Student) bool {
+	if db.Status == uint8(StudentActive) || db.Status == uint8(StudentUnknown) {
+		if len(db.Entity) > 1 {
+			return true
+		}
+	}
+	return false
+}
+
 func (mine *SchoolInfo) GetStudentsByName(name string) []*StudentInfo {
 	list := make([]*StudentInfo, 0, 10)
 	if name == "" {
@@ -429,6 +482,7 @@ func (mine *SchoolInfo) CreateSimpleStudent(name, entity, sn, card, operator str
 	db.Entity = entity
 	db.Sex = sex
 	db.SN = sn
+	db.Status = uint8(StudentActive)
 	if len(card) == 19 {
 		db.IDCard = card[1:]
 		db.SID = card
@@ -610,50 +664,60 @@ func (mine *SchoolInfo) AllActEntities() []*StudentInfo {
 	return list
 }
 
-func (mine *SchoolInfo) GetStudentsByStatus(st StudentStatus) []*StudentInfo {
-	mine.AllStudents()
-	mine.initClasses()
-	list := make([]*StudentInfo, 0, 100)
-	if st == StudentUnknown {
-		arr, err := nosql.GetStudentsByStatus(mine.UID, uint32(st))
-		if err != nil {
-			return list
-		}
-		for _, db := range arr {
-			info := new(StudentInfo)
-			info.initInfo(db)
-			list = append(list, info)
-		}
-	} else {
-		for _, class := range mine.classes {
-			var array []string
-			if st == StudentAll {
-				array = class.GetStudents()
-			} else if st == StudentLeave {
-				array = class.GetStudentsByStatus(st)
-			} else {
-				stat := class.GetStatus()
-				if stat == st {
-					if st == StudentActive {
-						array = class.GetStudentsByStatus(st)
-					} else {
-						array = class.GetStudents()
-					}
-				} else {
-
-				}
-			}
-			for _, uid := range array {
-				if !mine.hadStudentIn(list, uid) {
-					info := mine.getStudent(uid)
-					if info != nil {
-						info.Class = class.UID
-						list = append(list, info)
-					}
-				}
-			}
-		}
+func (mine *SchoolInfo) GetAllStudentsByStatus(st StudentStatus) []*StudentInfo {
+	//mine.AllStudents()
+	//mine.initClasses()
+	arr, err := nosql.GetStudentsByStatus(mine.UID, uint32(st))
+	list := make([]*StudentInfo, 0, len(arr))
+	if err != nil {
+		return list
 	}
+	for _, db := range arr {
+		info := new(StudentInfo)
+		info.initInfo(db)
+		list = append(list, info)
+	}
+
+	//if st == StudentUnknown {
+	//	arr, err := nosql.GetStudentsByStatus(mine.UID, uint32(st))
+	//	if err != nil {
+	//		return list
+	//	}
+	//	for _, db := range arr {
+	//		info := new(StudentInfo)
+	//		info.initInfo(db)
+	//		list = append(list, info)
+	//	}
+	//} else {
+	//	for _, class := range mine.classes {
+	//		var array []string
+	//		if st == StudentAll {
+	//			array = class.GetStudents()
+	//		} else if st == StudentLeave {
+	//			array = class.GetStudentsByStatus(st)
+	//		} else {
+	//			stat := class.GetStatus()
+	//			if stat == st {
+	//				if st == StudentActive {
+	//					array = class.GetStudentsByStatus(st)
+	//				} else {
+	//					array = class.GetStudents()
+	//				}
+	//			} else {
+	//
+	//			}
+	//		}
+	//		for _, uid := range array {
+	//			if !mine.hadStudentIn(list, uid) {
+	//				info := mine.getStudent(uid)
+	//				if info != nil {
+	//					info.Class = class.UID
+	//					list = append(list, info)
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 	return list
 }
 
@@ -715,24 +779,30 @@ func (mine *SchoolInfo) GetStudentByCard(sn string) *StudentInfo {
 	return nil
 }
 
-func (mine *SchoolInfo) GetPageStudents(page, number uint32) (uint32, uint32, []*StudentInfo) {
+func (mine *SchoolInfo) GetStudentByCustodian(phone, name string) *StudentInfo {
+	if phone == "" {
+		return nil
+	}
+	all := mine.AllStudents()
+	for _, info := range all {
+		if info.HadCustodian(phone) {
+			if name == "" {
+				return info
+			} else {
+				if name == info.Name {
+					return info
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (mine *SchoolInfo) GetAllStudentsByPage(page, number uint32) (uint32, uint32, []*StudentInfo) {
 	if number < 1 {
 		number = 10
 	}
 	all := mine.AllStudents()
-	if len(all) < 1 {
-		return 0, 0, make([]*StudentInfo, 0, 1)
-	}
-	total, maxPage, list := checkPage(page, number, all)
-
-	return total, maxPage, list
-}
-
-func (mine *SchoolInfo) GetPageStudentEntities(page, number uint32) (uint32, uint32, []*StudentInfo) {
-	if number < 1 {
-		number = 10
-	}
-	all := mine.AllActEntities()
 	if len(all) < 1 {
 		return 0, 0, make([]*StudentInfo, 0, 1)
 	}
@@ -745,7 +815,7 @@ func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint
 	if number < 1 {
 		number = 10
 	}
-	all := mine.GetStudentsByStatus(st)
+	all := mine.GetAllStudentsByStatus(st)
 	if len(all) < 1 {
 		return 0, 0, make([]*StudentInfo, 0, 1)
 	}
@@ -754,28 +824,38 @@ func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint
 	return total, maxPage, list
 }
 
-func (mine *SchoolInfo) GetStudentsByType(page, number uint32, st StudentStatus) (uint32, uint32, []*StudentInfo) {
-	all := mine.AllStudents()
-	list := make([]*StudentInfo, 0, 100)
-	for _, info := range all {
-		if info.Status == uint8(st) {
-			list = append(list, info)
-		}
+func (mine *SchoolInfo) GetLeaveStudents(page, number uint32) (uint32, uint32, []*StudentInfo) {
+	if number < 1 {
+		number = 10
 	}
-	if len(list) < 1 {
+	list1 := mine.GetAllStudentsByStatus(StudentDelete)
+	list2 := mine.GetAllStudentsByStatus(StudentLeave)
+	list3 := mine.GetAllStudentsByStatus(StudentFinish)
+	all := make([]*StudentInfo, 0, len(list1)+len(list2)+len(list3))
+	all = append(all, list1...)
+	all = append(all, list2...)
+	all = append(all, list3...)
+	if len(all) < 1 {
 		return 0, 0, make([]*StudentInfo, 0, 1)
 	}
-	total, maxPage, arr := checkPage(page, number, list)
-
+	total, maxPage, arr := checkPage(page, number, all)
 	return total, maxPage, arr
 }
 
-//func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint32, uint32, []*StudentInfo) {
-//	if st == StudentActive {
-//		return mine.GetActiveStudents(page, number)
-//	}else{
-//		nosql.GetStudentsByStatus(mine.UID, st)
-//	}
-//}
+func (mine *SchoolInfo) GetActiveStudents(page, number uint32) (uint32, uint32, []*StudentInfo) {
+	if number < 1 {
+		number = 10
+	}
+	list1 := mine.GetAllStudentsByStatus(StudentActive)
+	list2 := mine.GetAllStudentsByStatus(StudentUnknown)
+	all := make([]*StudentInfo, 0, len(list1)+len(list2))
+	all = append(all, list1...)
+	all = append(all, list2...)
+	if len(all) < 1 {
+		return 0, 0, make([]*StudentInfo, 0, 1)
+	}
+	total, maxPage, arr := checkPage(page, number, all)
+	return total, maxPage, arr
+}
 
 //endregion

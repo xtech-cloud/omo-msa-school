@@ -50,7 +50,7 @@ func switchHistory(info *proxy.HistoryInfo) *pb.HistoryInfo {
 func (mine *TeacherService) AddOne(ctx context.Context, in *pb.ReqTeacherAdd, out *pb.ReplyTeacherInfo) error {
 	path := "teacher.addOne"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Owner)
+	school, _ := cache.Context().GetSchoolBy(in.Owner)
 	if school == nil {
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -77,7 +77,7 @@ func (mine *TeacherService) GetOne(ctx context.Context, in *pb.RequestInfo, out 
 	inLog(path, in)
 	var info *cache.TeacherInfo
 	if len(in.Parent) > 1 {
-		school, err := cache.Context().GetSchoolByUID(in.Parent)
+		school, err := cache.Context().GetSchoolBy(in.Parent)
 		if err != nil {
 			out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
 			return nil
@@ -118,7 +118,7 @@ func (mine *TeacherService) GetList(ctx context.Context, in *pb.RequestPage, out
 	var total uint32 = 0
 	var max uint32 = 0
 	if len(in.Parent) > 1 {
-		school, err := cache.Context().GetSchoolByUID(in.Parent)
+		school, err := cache.Context().GetSchoolBy(in.Parent)
 		if err != nil {
 			out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
 			return nil
@@ -161,7 +161,7 @@ func (mine *TeacherService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 	}
 	out.List = make([]*pb.TeacherInfo, 0, 5)
 	if len(in.Parent) > 1 {
-		school, err := cache.Context().GetSchoolByUID(in.Parent)
+		school, err := cache.Context().GetSchoolBy(in.Parent)
 		if err != nil {
 			out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
 			return nil
@@ -248,7 +248,7 @@ func (mine *TeacherService) SetByFilter(ctx context.Context, in *pb.RequestPage,
 func (mine *TeacherService) RemoveOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyInfo) error {
 	path := "teacher.removeOne"
 	inLog(path, in)
-	info, _ := cache.Context().GetSchoolByUID(in.Parent)
+	info, _ := cache.Context().GetSchoolBy(in.Parent)
 	if info == nil {
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -266,7 +266,7 @@ func (mine *TeacherService) RemoveOne(ctx context.Context, in *pb.RequestInfo, o
 func (mine *TeacherService) AddBatch(ctx context.Context, in *pb.ReqTeacherBatch, out *pb.ReplyTeacherList) error {
 	path := "teacher.addBatch"
 	inLog(path, in)
-	school, _ := cache.Context().GetSchoolByUID(in.Owner)
+	school, _ := cache.Context().GetSchoolBy(in.Owner)
 	if school == nil {
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
