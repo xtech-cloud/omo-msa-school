@@ -8,6 +8,7 @@ import (
 	"omo.msa.school/cache"
 	"omo.msa.school/proxy"
 	"strconv"
+	"strings"
 )
 
 type StudentService struct{}
@@ -49,12 +50,19 @@ func (mine *StudentService) AddOne(ctx context.Context, in *pb.ReqStudentAdd, ou
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
+
 	var student *cache.StudentInfo
 	if len(in.Card) > 5 {
 		student = school.GetStudentByCard(in.Card)
 	} else if len(in.Custodians) > 0 {
-		if len(in.Custodians[0].Phones) > 0 {
-			student = school.GetStudentByCustodian(in.Custodians[0].Phones[0], in.Name)
+		for _, custodian := range in.Custodians {
+			for _, phone := range custodian.Phones {
+				student = school.GetStudentByCustodian(phone, in.Name)
+				if student != nil {
+					break
+				}
+			}
 		}
 	}
 
@@ -291,6 +299,8 @@ func (mine *StudentService) UpdateOne(ctx context.Context, in *pb.ReqStudentUpda
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
+
 	_, info := school.GetStudent(in.Uid)
 	if info == nil {
 		out.Status = outError(path, "not found the student by uid", pbstatus.ResultStatus_NotExisted)

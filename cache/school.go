@@ -20,17 +20,13 @@ type SchoolInfo struct {
 	Cover   string
 	Support string
 
-	Entity      string
-	Honors      []proxy.HonorInfo // 学生荣誉
-	Respects    []proxy.HonorInfo // 教师荣誉
-	Subjects    []proxy.SubjectInfo
-	teacherList []string
-	classes     []*ClassInfo
-	//teachers   []*TeacherInfo
-	students       []*StudentInfo
-	isInitClasses  bool
-	isInitStudents bool
-	//isInitTeachers bool
+	Entity        string
+	Honors        []proxy.HonorInfo // 学生荣誉
+	Respects      []proxy.HonorInfo // 教师荣誉
+	Subjects      []proxy.SubjectInfo
+	teacherList   []string
+	classes       []*ClassInfo
+	isInitClasses bool
 }
 
 func (mine *SchoolInfo) initInfo(db *nosql.School) {
@@ -49,10 +45,9 @@ func (mine *SchoolInfo) initInfo(db *nosql.School) {
 	mine.Subjects = db.Subjects
 	mine.Entity = db.Entity
 	mine.Status = db.Status
+	mine.maxGrade = db.Grade
 	mine.teacherList = db.Teachers
 	mine.isInitClasses = false
-	mine.isInitStudents = false
-	//mine.isInitTeachers = false
 	if mine.teacherList == nil {
 		mine.teacherList = make([]string, 0, 1)
 		_ = nosql.UpdateSchoolTeachers(mine.UID, mine.Operator, mine.teacherList)
@@ -312,7 +307,6 @@ func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, str
 	if err != nil {
 		return nil, "", err
 	}
-	mine.students = append(mine.students, student)
 	class := mine.GetClass(data.Class)
 	if class != nil {
 		_ = class.AddStudent(student)
@@ -500,7 +494,6 @@ func (mine *SchoolInfo) CreateSimpleStudent(name, entity, sn, card, operator str
 
 	student := new(StudentInfo)
 	student.initInfo(db)
-	mine.students = append(mine.students, student)
 	return student, nil
 }
 
@@ -532,7 +525,6 @@ func (mine *SchoolInfo) appendStudent(student *StudentInfo, operator string, gra
 		Month: time.January,
 		Day:   1,
 	}
-	mine.students = append(mine.students, student)
 	class := mine.checkClass("", operator, date, num, kind)
 	if class != nil {
 		_ = class.AddStudent(student)
@@ -560,19 +552,9 @@ func (mine *SchoolInfo) RemoveStudent(uid, operator string) error {
 		return errors.New("not found the student")
 	}
 	if info.Remove(operator) {
-		for i := 0; i < len(mine.students); i += 1 {
-			if mine.students[i].UID == uid {
-				if i == len(mine.students)-1 {
-					mine.students = append(mine.students[:i])
-				} else {
-					mine.students = append(mine.students[:i], mine.students[i+1:]...)
-				}
-				break
-			}
+		if class != nil {
+			_ = class.RemoveStudent(uid, "the admin delete student", info.ID, StudentDelete)
 		}
-	}
-	if class != nil {
-		_ = class.RemoveStudent(uid, "the admin delete student", info.ID, StudentDelete)
 	}
 	return nil
 }
@@ -629,9 +611,6 @@ func (mine *SchoolInfo) getStudent(uid string) *StudentInfo {
 }
 
 func (mine *SchoolInfo) AllStudents() []*StudentInfo {
-	if mine.isInitStudents {
-		return mine.students
-	}
 	students, err := nosql.GetStudentsBySchool(mine.UID)
 	if err == nil {
 		list := make([]*StudentInfo, 0, len(students))
@@ -640,17 +619,15 @@ func (mine *SchoolInfo) AllStudents() []*StudentInfo {
 			info.initInfo(db)
 			list = append(list, info)
 		}
-		mine.students = list
+		return list
 	} else {
-		mine.students = make([]*StudentInfo, 0, 1)
+		return make([]*StudentInfo, 0, 1)
 	}
-	mine.isInitStudents = true
-	return mine.students
 }
 
 func (mine *SchoolInfo) AllActEntities() []*StudentInfo {
 	mine.initClasses()
-	list := make([]*StudentInfo, 0, len(mine.students))
+	list := make([]*StudentInfo, 0, 200)
 	for _, class := range mine.classes {
 		for _, item := range class.Members {
 			if item.Status == uint8(StudentActive) {
@@ -665,8 +642,6 @@ func (mine *SchoolInfo) AllActEntities() []*StudentInfo {
 }
 
 func (mine *SchoolInfo) GetAllStudentsByStatus(st StudentStatus) []*StudentInfo {
-	//mine.AllStudents()
-	//mine.initClasses()
 	arr, err := nosql.GetStudentsByStatus(mine.UID, uint32(st))
 	list := make([]*StudentInfo, 0, len(arr))
 	if err != nil {
@@ -677,47 +652,6 @@ func (mine *SchoolInfo) GetAllStudentsByStatus(st StudentStatus) []*StudentInfo 
 		info.initInfo(db)
 		list = append(list, info)
 	}
-
-	//if st == StudentUnknown {
-	//	arr, err := nosql.GetStudentsByStatus(mine.UID, uint32(st))
-	//	if err != nil {
-	//		return list
-	//	}
-	//	for _, db := range arr {
-	//		info := new(StudentInfo)
-	//		info.initInfo(db)
-	//		list = append(list, info)
-	//	}
-	//} else {
-	//	for _, class := range mine.classes {
-	//		var array []string
-	//		if st == StudentAll {
-	//			array = class.GetStudents()
-	//		} else if st == StudentLeave {
-	//			array = class.GetStudentsByStatus(st)
-	//		} else {
-	//			stat := class.GetStatus()
-	//			if stat == st {
-	//				if st == StudentActive {
-	//					array = class.GetStudentsByStatus(st)
-	//				} else {
-	//					array = class.GetStudents()
-	//				}
-	//			} else {
-	//
-	//			}
-	//		}
-	//		for _, uid := range array {
-	//			if !mine.hadStudentIn(list, uid) {
-	//				info := mine.getStudent(uid)
-	//				if info != nil {
-	//					info.Class = class.UID
-	//					list = append(list, info)
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
 	return list
 }
 

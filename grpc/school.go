@@ -7,6 +7,7 @@ import (
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.school/cache"
 	"omo.msa.school/proxy"
+	"strings"
 )
 
 type SchoolService struct{}
@@ -59,6 +60,8 @@ func (mine *SchoolService) AddOne(ctx context.Context, in *pb.ReqSchoolAdd, out 
 		out.Status = outError(path, "the scene uid is empty", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
+
 	var info *cache.SchoolInfo
 	var err error
 	info, _ = cache.Context().GetSchoolBy(in.Scene)
@@ -189,6 +192,7 @@ func (mine *SchoolService) UpdateOne(ctx context.Context, in *pb.ReqSchoolUpdate
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
 
 	err := school.UpdateInfo(in.Name, in.Remark, in.Operator)
 	if err != nil {

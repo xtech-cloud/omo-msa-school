@@ -8,6 +8,7 @@ import (
 	"omo.msa.school/cache"
 	"omo.msa.school/proxy"
 	"strconv"
+	"strings"
 )
 
 type ClassService struct{}
@@ -44,6 +45,7 @@ func (mine *ClassService) AddOne(ctx context.Context, in *pb.ReqClassAdd, out *p
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
 
 	list, err1 := school.CreateClasses(in.Name, in.Enrol, in.Operator, uint16(in.Count), uint16(in.Type))
 	if err1 != nil {
@@ -177,6 +179,7 @@ func (mine *ClassService) UpdateOne(ctx context.Context, in *pb.ReqClassUpdate, 
 		out.Status = outError(path, "not found the school by scene", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
 
 	info := school.GetClass(in.Uid)
 	if info == nil {

@@ -8,6 +8,7 @@ import (
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.school/cache"
 	"strconv"
+	"strings"
 )
 
 type LessonService struct{}
@@ -37,6 +38,7 @@ func (mine *LessonService) AddOne(ctx context.Context, in *pb.ReqLessonAdd, out 
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
 
 	info, err1 := school.CreateLesson(in.Name, in.Remark, in.Cover, in.Operator, in.Tags)
 	if err1 != nil {
@@ -130,6 +132,7 @@ func (mine *LessonService) UpdateOne(ctx context.Context, in *pb.ReqLessonUpdate
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
 
 	err1 := info.UpdateInfo(in.Name, in.Remark, in.Operator, in.Tags)
 	if err1 != nil {

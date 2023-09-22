@@ -7,6 +7,7 @@ import (
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.school/cache"
 	"omo.msa.school/proxy"
+	"strings"
 )
 
 type TeacherService struct{}
@@ -55,6 +56,7 @@ func (mine *TeacherService) AddOne(ctx context.Context, in *pb.ReqTeacherAdd, ou
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
 
 	info, err1 := school.CreateTeacher(in.Name, in.Entity, in.User, in.Operator, in.Classes, in.Subjects)
 	if err1 != nil {
@@ -219,6 +221,7 @@ func (mine *TeacherService) UpdateOne(ctx context.Context, in *pb.ReqTeacherUpda
 		out.Status = outError(path, "not found the teacher by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
+	in.Name = strings.TrimSpace(in.Name)
 
 	err1 := info.UpdateBase(in.Name, in.Operator, in.Classes, in.Subjects)
 	if err1 != nil {
