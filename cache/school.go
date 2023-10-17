@@ -46,6 +46,9 @@ func (mine *SchoolInfo) initInfo(db *nosql.School) {
 	mine.Entity = db.Entity
 	mine.Status = db.Status
 	mine.maxGrade = db.Grade
+	if mine.maxGrade < 1 {
+		mine.maxGrade = 6
+	}
 	mine.teacherList = db.Teachers
 	mine.isInitClasses = false
 	if mine.teacherList == nil {
@@ -73,9 +76,6 @@ func (mine *SchoolInfo) initClasses() {
 }
 
 func (mine *SchoolInfo) MaxGrade() uint8 {
-	if mine.maxGrade < 6 {
-		mine.maxGrade = 6
-	}
 	return mine.maxGrade
 }
 
@@ -92,6 +92,9 @@ func (mine *SchoolInfo) UpdateInfo(name, remark, operator string) error {
 func (mine *SchoolInfo) UpdateGrade(grade uint8, operator string) error {
 	if grade < 6 {
 		grade = 6
+	}
+	if mine.maxGrade == grade {
+		return nil
 	}
 	err := nosql.UpdateSchoolGrade(mine.UID, grade, operator)
 	if err != nil {
@@ -410,11 +413,11 @@ func (mine *SchoolInfo) GetBindStudents(grades []string) []*StudentInfo {
 	}
 	now := time.Now()
 	year := now.Year() - max
-	month := 8
-	if now.Month() >= 8 {
-		year += 1
-	}
-	array, err := nosql.GetStudentsByYear(mine.UID, year, month)
+	//month := 8
+	//if now.Month() >= 8 {
+	//	year += 1
+	//}
+	array, err := nosql.GetStudentsByYear(mine.UID, year)
 	if err != nil {
 		return list
 	}

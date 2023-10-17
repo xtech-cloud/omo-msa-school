@@ -71,6 +71,7 @@ func main() {
 func checkTimer() {
 	time.Sleep(time.Second * 5)
 	cache.Context().CheckStudentFinish()
+	cache.Context().CheckStudentError()
 	cli := cron.New()
 	_, er := cli.AddFunc("1 22 1 * *", func() {
 		cache.Context().CheckStudentFinish()

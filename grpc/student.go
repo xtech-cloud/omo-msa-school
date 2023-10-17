@@ -380,7 +380,7 @@ func (mine *StudentService) AddBatch(ctx context.Context, in *pb.ReqStudentBatch
 }
 
 func (mine *StudentService) BindEntity(ctx context.Context, in *pb.ReqStudentBind, out *pb.ReplyStudentInfo) error {
-	path := "class.bindEntity"
+	path := "student.bindEntity"
 	inLog(path, in)
 	school, _ := cache.Context().GetSchoolBy(in.Owner)
 	if school == nil {

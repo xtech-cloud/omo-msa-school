@@ -7,6 +7,7 @@ import (
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	"omo.msa.school/cache"
 	"omo.msa.school/proxy"
+	"strconv"
 	"strings"
 )
 
@@ -215,6 +216,13 @@ func (mine *SchoolService) SetByFilter(ctx context.Context, in *pb.RequestPage, 
 	var err error
 	if in.Filter == "support" {
 		err = school.UpdateSupport(in.Operator, in.Value)
+	} else if in.Filter == "grade" {
+		num, er := strconv.Atoi(in.Value)
+		if er != nil {
+			out.Status = outError(path, er.Error(), pbstatus.ResultStatus_FormatError)
+			return nil
+		}
+		err = school.UpdateGrade(uint8(num), in.Operator)
 	}
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)

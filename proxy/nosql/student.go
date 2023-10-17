@@ -210,8 +210,9 @@ func GetAllStudents() ([]*Student, error) {
 func GetStudentsByKeyword(school, key string) ([]*Student, error) {
 	def := new(time.Time)
 	regex := bson.M{"$regex": key}
-	filter := bson.M{"school": school, "deleteAt": def,
-		"$or": bson.A{bson.M{"name": regex}, bson.M{"sn": regex}, bson.M{"card": regex}, bson.M{"sid": regex}}}
+	//filter := bson.M{"school": school, "deleteAt": def,
+	//	"$or": bson.A{bson.M{"name": regex}, bson.M{"sn": regex}, bson.M{"card": regex}, bson.M{"sid": regex}}}
+	filter := bson.M{"school": school, "deleteAt": def, "name": regex}
 	cursor, err1 := findMany(TableStudent, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -288,9 +289,9 @@ func GetStudentsByEnrol(school, enrol string) ([]*Student, error) {
 	return items, nil
 }
 
-func GetStudentsByYear(school string, year, month int) ([]*Student, error) {
+func GetStudentsByYear(school string, year int) ([]*Student, error) {
 	var items = make([]*Student, 0, 10)
-	msg := bson.M{"school": school, "deleteAt": new(time.Time), "enrol.year": bson.M{"$gte": year}, "enrol.month": bson.M{"$gte": month}}
+	msg := bson.M{"school": school, "deleteAt": new(time.Time), "enrol.year": bson.M{"$gte": year}}
 	cursor, err1 := findMany(TableStudent, msg, 0)
 	if err1 != nil {
 		return nil, err1

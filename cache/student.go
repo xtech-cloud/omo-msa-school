@@ -204,12 +204,13 @@ func (mine *StudentInfo) BindEntity(entity, operator string) error {
 	if entity == "" {
 		return errors.New("the entity is empty")
 	}
-	if mine.Entity != "" {
-		return errors.New("the entity has existed")
-	}
 	if mine.Entity == entity {
 		return nil
 	}
+	if mine.Entity != "" {
+		return errors.New("the student entity had existed")
+	}
+
 	err := nosql.UpdateStudentEntity(mine.UID, entity, operator)
 	if err == nil {
 		mine.Entity = entity

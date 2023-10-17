@@ -385,3 +385,17 @@ func (mine *cacheContext) CheckStudentFinish() {
 		}
 	}
 }
+
+func (mine *cacheContext) CheckStudentError() {
+	db2s, _ := nosql.GetAllStudentsByStatus(uint32(StudentFinish))
+	for _, db := range db2s {
+		student := new(StudentInfo)
+		student.initInfo(db)
+		school, _ := mine.GetSchoolBy(student.School)
+		if school != nil {
+			if student.Grade() < school.maxGrade {
+				_ = student.UpdateStatus(StudentActive, student.Operator)
+			}
+		}
+	}
+}
