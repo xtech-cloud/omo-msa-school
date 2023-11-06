@@ -20,6 +20,10 @@ func (mine *DateInfo) String() string {
 	return fmt.Sprintf("%d/%d/%d", mine.Year, mine.Month, mine.Day)
 }
 
+func (mine *DateInfo) Clone() DateInfo {
+	return DateInfo{Name: mine.Name, Year: mine.Year, Month: mine.Month, Day: mine.Day}
+}
+
 func (mine *DateInfo) Equal(year uint16, month time.Month) bool {
 	if mine.Year != year {
 		return false

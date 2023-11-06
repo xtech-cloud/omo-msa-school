@@ -13,7 +13,7 @@ import (
 
 type StudentService struct{}
 
-func switchStudent(info *cache.StudentInfo, class string) *pb.StudentInfo {
+func switchStudent(info *cache.StudentInfo, class *cache.ClassInfo) *pb.StudentInfo {
 	tmp := new(pb.StudentInfo)
 	tmp.Uid = info.UID
 	tmp.Id = info.ID
@@ -29,11 +29,27 @@ func switchStudent(info *cache.StudentInfo, class string) *pb.StudentInfo {
 	tmp.Sid = info.SID
 	tmp.Status = uint32(info.Status)
 	tmp.Sex = uint32(info.Sex)
-	if class == "" {
-		tmp.Class = info.Class
-	} else {
-		tmp.Class = class
+	tmp.Number = uint32(info.ClassNo)
+	tmp.Kvs = make([]*pb.PairInfo, 0, 2)
+	if info.Status == cache.StudentActive || info.Status == cache.StudentUnknown {
+		if class == nil {
+			cla := cache.Context().GetClass(info.Class)
+			if cla != nil {
+				tmp.Class = info.Class
+				tmp.Kvs = append(tmp.Kvs, &pb.PairInfo{Key: tmp.Class, Value: cla.FullName()})
+			} else {
+				tmp.Class = fmt.Sprintf("%d-%d", info.EnrolDate.Year, tmp.Number)
+				tmp.Kvs = append(tmp.Kvs, &pb.PairInfo{Key: tmp.Class, Value: fmt.Sprintf("%d年级%d班", info.Grade(), info.ClassNo)})
+			}
+		} else {
+			tmp.Class = class.UID
+			tmp.Kvs = append(tmp.Kvs, &pb.PairInfo{Key: tmp.Class, Value: class.FullName()})
+		}
+	} else if info.Status == cache.StudentFinish {
+		tmp.Class = info.EnrolDate.String()
+		tmp.Kvs = append(tmp.Kvs, &pb.PairInfo{Key: tmp.Class, Value: fmt.Sprintf("%d", info.EnrolDate.Year)})
 	}
+
 	tmp.School = info.School
 	tmp.Custodians = make([]*pb.CustodianInfo, 0, len(info.Custodians))
 	for _, custodian := range info.Custodians {
@@ -77,16 +93,17 @@ func (mine *StudentService) AddOne(ctx context.Context, in *pb.ReqStudentAdd, ou
 		if len(in.Entity) > 0 {
 			_ = student.BindEntity(in.Entity, in.Operator)
 		}
+		_ = student.UpdateClassNumber(uint16(in.Number), in.Operator)
 		class := school.GetClassByStudent(student.UID, cache.StudentAll)
 		if class != nil {
-			out.Info = switchStudent(student, class.UID)
+			out.Info = switchStudent(student, class)
 		} else {
 			cla := school.GetClass(in.Class)
 			if cla != nil {
 				_ = cla.AddStudent(student)
-				out.Info = switchStudent(student, cla.UID)
+				out.Info = switchStudent(student, cla)
 			} else {
-				out.Info = switchStudent(student, in.Class)
+				out.Info = switchStudent(student, nil)
 			}
 		}
 	}
@@ -98,7 +115,6 @@ func (mine *StudentService) AddOne(ctx context.Context, in *pb.ReqStudentAdd, ou
 func (mine *StudentService) GetOne(ctx context.Context, in *pb.RequestInfo, out *pb.ReplyStudentInfo) error {
 	path := "student.getOne"
 	inLog(path, in)
-	var classUID = ""
 	var info *cache.StudentInfo
 	var class *cache.ClassInfo
 	if len(in.Parent) > 1 {
@@ -113,7 +129,7 @@ func (mine *StudentService) GetOne(ctx context.Context, in *pb.RequestInfo, out 
 			} else if in.Filter == "sn" {
 				info = school.GetStudentBySN(in.Value)
 			} else if in.Filter == "entity" {
-				info = school.GetStudentByEntity(in.Value)
+				class, info = school.GetStudentClassByEntity(in.Value)
 			}
 		} else {
 			class, info = school.GetStudent(in.Uid)
@@ -121,9 +137,6 @@ func (mine *StudentService) GetOne(ctx context.Context, in *pb.RequestInfo, out 
 		if info == nil {
 			out.Status = outError(path, "not found the student", pbstatus.ResultStatus_NotExisted)
 			return nil
-		}
-		if class != nil {
-			classUID = class.UID
 		}
 	} else {
 		st := cache.Context().GetStudent(in.Uid)
@@ -133,7 +146,7 @@ func (mine *StudentService) GetOne(ctx context.Context, in *pb.RequestInfo, out 
 		}
 		info = st
 	}
-	out.Info = switchStudent(info, classUID)
+	out.Info = switchStudent(info, class)
 	out.Status = outLog(path, out)
 	return nil
 }
@@ -172,9 +185,11 @@ func (mine *StudentService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 		} else if in.Filter == "search" {
 			list = school.SearchStudents(in.Value)
 		} else if in.Filter == "enrol" {
-			list = school.GetStudentsByEnrol(in.Value)
+			list = school.GetStudentsByEnrol(in.Value, uint16(in.Number))
 		} else if in.Filter == "bind" {
 			list = school.GetBindStudents(in.List)
+		} else if in.Filter == "regex" {
+
 		}
 	} else {
 		if in.Filter == "entity" {
@@ -199,11 +214,7 @@ func (mine *StudentService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 	out.List = make([]*pb.StudentInfo, 0, len(list))
 	for _, info := range list {
 		class := cache.Context().GetClassByStudent(info.UID)
-		cid := ""
-		if class != nil {
-			cid = class.UID
-		}
-		out.List = append(out.List, switchStudent(info, cid))
+		out.List = append(out.List, switchStudent(info, class))
 	}
 	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
 	return nil
@@ -242,7 +253,7 @@ func (mine *StudentService) GetList(ctx context.Context, in *pb.RequestPage, out
 
 	out.List = make([]*pb.StudentInfo, 0, len(list))
 	for _, info := range list {
-		out.List = append(out.List, switchStudent(info, ""))
+		out.List = append(out.List, switchStudent(info, nil))
 	}
 	out.Pages = max
 	out.Total = total
@@ -258,7 +269,7 @@ func (mine *StudentService) GetArray(ctx context.Context, in *pb.RequestList, ou
 		for _, uid := range in.List {
 			info := cache.Context().GetStudent(uid)
 			if info != nil {
-				out.List = append(out.List, switchStudent(info, ""))
+				out.List = append(out.List, switchStudent(info, nil))
 			}
 		}
 	} else {
@@ -270,11 +281,7 @@ func (mine *StudentService) GetArray(ctx context.Context, in *pb.RequestList, ou
 		for _, uid := range in.List {
 			class, info := school.GetStudent(uid)
 			if info != nil {
-				if class == nil {
-					out.List = append(out.List, switchStudent(info, ""))
-				} else {
-					out.List = append(out.List, switchStudent(info, class.UID))
-				}
+				out.List = append(out.List, switchStudent(info, class))
 			}
 		}
 	}
@@ -301,7 +308,7 @@ func (mine *StudentService) UpdateOne(ctx context.Context, in *pb.ReqStudentUpda
 	}
 	in.Name = strings.TrimSpace(in.Name)
 
-	_, info := school.GetStudent(in.Uid)
+	cla, info := school.GetStudent(in.Uid)
 	if info == nil {
 		out.Status = outError(path, "not found the student by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -316,7 +323,7 @@ func (mine *StudentService) UpdateOne(ctx context.Context, in *pb.ReqStudentUpda
 		return nil
 	}
 
-	out.Info = switchStudent(info, "")
+	out.Info = switchStudent(info, cla)
 	out.Status = outLog(path, out)
 	return nil
 }
@@ -329,13 +336,32 @@ func (mine *StudentService) SetByFilter(ctx context.Context, in *pb.RequestPage,
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	_, info := school.GetStudent(in.Uid)
+	cla, info := school.GetStudent(in.Uid)
 	if info == nil {
 		out.Status = outError(path, "not found the student by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-
-	out.Info = switchStudent(info, "")
+	var err error
+	if in.Filter == "class" {
+		num, er := strconv.Atoi(in.Value)
+		if er != nil {
+			out.Status = outError(path, er.Error(), pbstatus.ResultStatus_DBException)
+			return nil
+		}
+		err = info.UpdateClassNumber(uint16(num), in.Operator)
+	} else if in.Filter == "enrol" {
+		_ = info.UpdateClassNumber(uint16(in.Number), in.Operator)
+		date := proxy.DateInfo{}
+		err = date.Parse(in.Value)
+		if err == nil {
+			err = info.UpdateEnrol(date, in.Operator)
+		}
+	}
+	if err != nil {
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
+	out.Info = switchStudent(info, cla)
 	out.Status = outLog(path, out)
 	return nil
 }
@@ -388,8 +414,9 @@ func (mine *StudentService) BindEntity(ctx context.Context, in *pb.ReqStudentBin
 		return nil
 	}
 	var info *cache.StudentInfo
+	var cla *cache.ClassInfo
 	if len(in.Uid) > 1 {
-		_, info = school.GetStudent(in.Uid)
+		cla, info = school.GetStudent(in.Uid)
 	} else {
 		info = school.GetStudentByCard(in.Card)
 	}
@@ -403,7 +430,7 @@ func (mine *StudentService) BindEntity(ctx context.Context, in *pb.ReqStudentBin
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
-	out.Info = switchStudent(info, "")
+	out.Info = switchStudent(info, cla)
 	out.Status = outLog(path, out)
 	return nil
 }
@@ -416,8 +443,7 @@ func (mine *StudentService) UpdateCustodian(ctx context.Context, in *pb.ReqStude
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	_, info := school.GetStudent(in.Uid)
-
+	cla, info := school.GetStudent(in.Uid)
 	if info == nil {
 		out.Status = outError(path, "not found the student by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -427,7 +453,7 @@ func (mine *StudentService) UpdateCustodian(ctx context.Context, in *pb.ReqStude
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
-	out.Info = switchStudent(info, "")
+	out.Info = switchStudent(info, cla)
 	out.Status = outLog(path, out)
 	return nil
 }
@@ -457,7 +483,7 @@ func (mine *StudentService) UpdateTags(ctx context.Context, in *pb.RequestList, 
 }
 
 func (mine *StudentService) UpdateStatus(ctx context.Context, in *pb.RequestState, out *pb.ReplyInfo) error {
-	path := "class.updateCustodian"
+	path := "class.updateStatus"
 	inLog(path, in)
 	school, _ := cache.Context().GetSchoolBy(in.Parent)
 	if school == nil {

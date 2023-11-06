@@ -298,7 +298,7 @@ func (mine *ClassInfo) RemoveStudent(uid, remark string, id uint64, st StudentSt
 }
 
 //region Class Fun
-func (mine *SchoolInfo) CreateClasses(name, enrol, operator string, number, kind uint16) ([]*ClassInfo, error) {
+func (mine *SchoolInfo) CreateClasses(name, enrol, operator string, number uint16, kind ClassType) ([]*ClassInfo, error) {
 	mine.initClasses()
 	if number < 0 {
 		return nil, errors.New("the number must not more than -1")
@@ -340,7 +340,7 @@ func (mine *SchoolInfo) CreateClasses(name, enrol, operator string, number, kind
 	return array, nil
 }
 
-func (mine *SchoolInfo) createClass(name, enrol, operator string, number, kind uint16) (*ClassInfo, error) {
+func (mine *SchoolInfo) createClass(name, enrol, operator string, number uint16, kind ClassType) (*ClassInfo, error) {
 	db := new(nosql.Class)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetClassNextID()
@@ -387,6 +387,32 @@ func (mine *SchoolInfo) GetClassesByEnrol(year uint16, month time.Month) []*Clas
 	for _, item := range mine.classes {
 		if item.EnrolDate.Equal(year, month) {
 			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func (mine *SchoolInfo) GetAllClasses() []*ClassInfo {
+	dbs, err := nosql.GetStudentsBySchool(mine.UID)
+	list := make([]*ClassInfo, 0, len(dbs))
+	hadOne := func(arr []*ClassInfo, enrol string, num uint16) bool {
+		for _, info := range arr {
+			if info.EnrolDate.String() == enrol && info.Number == num {
+				return true
+			}
+		}
+		return false
+	}
+	if err == nil {
+		for _, item := range dbs {
+			if !hadOne(list, item.EnrolDate.String(), item.Number) {
+				tmp := new(ClassInfo)
+				tmp.EnrolDate = item.EnrolDate
+				tmp.Number = item.Number
+				tmp.School = mine.UID
+				tmp.maxGrade = mine.MaxGrade()
+				list = append(list, tmp)
+			}
 		}
 	}
 	return list
@@ -562,7 +588,7 @@ func (mine *SchoolInfo) GetClassByEntity(entity string, st StudentStatus) *Class
 	return mine.GetClassByStudent(student.UID, st)
 }
 
-func (mine *SchoolInfo) checkClass(name, operator string, enrol proxy.DateInfo, class, kind uint16) *ClassInfo {
+func (mine *SchoolInfo) checkClass(name, operator string, enrol *proxy.DateInfo, class uint16, kind ClassType) *ClassInfo {
 	var info *ClassInfo
 	info = mine.GetClassByEnrol(enrol, class)
 	if info == nil {
@@ -585,7 +611,7 @@ func (mine *SchoolInfo) GetClassByNO(grade uint8, number uint16) *ClassInfo {
 	return nil
 }
 
-func (mine *SchoolInfo) GetClassByEnrol(enrol proxy.DateInfo, number uint16) *ClassInfo {
+func (mine *SchoolInfo) GetClassByEnrol(enrol *proxy.DateInfo, number uint16) *ClassInfo {
 	mine.initClasses()
 	for _, item := range mine.classes {
 		g := item.EnrolDate.Year

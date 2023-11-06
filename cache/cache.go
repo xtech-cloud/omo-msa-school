@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.school/proxy"
 	"omo.msa.school/proxy/nosql"
@@ -10,7 +12,7 @@ import (
 )
 
 func (mine *cacheContext) GetClass(uid string) *ClassInfo {
-	if uid == "" {
+	if len(uid) < 1 {
 		return nil
 	}
 	for _, item := range mine.schools {
@@ -20,6 +22,23 @@ func (mine *cacheContext) GetClass(uid string) *ClassInfo {
 		}
 	}
 	return nil
+}
+
+func (mine *cacheContext) GetClassByEnrol(school string, enrol *proxy.DateInfo, num uint16) (*ClassInfo, error) {
+	if num < 1 {
+		return nil, errors.New("the class number is 0")
+	}
+	info, err := mine.GetSchoolBy(school)
+	if err != nil {
+		return nil, err
+	}
+	tmp := info.GetClassByEnrol(enrol, uint16(num))
+	if tmp == nil {
+		msg := enrol.String()
+		name := fmt.Sprintf("%s-%d", msg, num)
+		tmp, err = info.createClass(name, msg, info.Operator, uint16(num), ClassTypeDef)
+	}
+	return tmp, err
 }
 
 func (mine *cacheContext) GetClassByStudent(uid string) *ClassInfo {
@@ -196,7 +215,7 @@ func (mine *cacheContext) CheckTeacher(entity string) *SchoolInfo {
 	return nil
 }
 
-func (mine *cacheContext) createStudent(owner, name, sn, sid, operator string, enrol proxy.DateInfo, sex uint8, st StudentStatus, custodians []proxy.CustodianInfo) (*StudentInfo, error) {
+func (mine *cacheContext) createStudent(owner, name, sn, sid, operator string, enrol *proxy.DateInfo, sex uint8, st StudentStatus, custodians []proxy.CustodianInfo) (*StudentInfo, error) {
 	db := new(nosql.Student)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetStudentNextID()
@@ -204,7 +223,7 @@ func (mine *cacheContext) createStudent(owner, name, sn, sid, operator string, e
 	db.Entity = ""
 	db.Name = strings.TrimRight(name, " ")
 	db.Creator = operator
-	db.EnrolDate = enrol
+	db.EnrolDate = enrol.Clone()
 	db.School = owner
 	db.Tags = make([]string, 0, 1)
 	if st == StudentDelete {

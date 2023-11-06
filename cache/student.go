@@ -22,8 +22,9 @@ const (
 type StudentStatus uint8
 
 type StudentInfo struct {
-	Sex    uint8
-	Status StudentStatus
+	Sex     uint8
+	Status  StudentStatus
+	ClassNo uint16
 	baseInfo
 	Entity     string
 	SN         string //学号
@@ -49,6 +50,7 @@ func (mine *StudentInfo) initInfo(db *nosql.Student) {
 	mine.SN = db.SN
 	mine.Sex = db.Sex
 	mine.SID = db.SID
+	mine.ClassNo = db.Number
 	mine.IDCard = db.IDCard
 	mine.EnrolDate = db.EnrolDate
 	mine.School = db.School
@@ -169,6 +171,9 @@ func (mine *StudentInfo) UpdateSelf(name, sn, card, operator string, sex uint8) 
 }
 
 func (mine *StudentInfo) UpdateEnrol(enrol proxy.DateInfo, operator string) error {
+	if mine.EnrolDate.String() == enrol.String() {
+		return nil
+	}
 	err := nosql.UpdateStudentEnrol(mine.UID, operator, enrol)
 	if err == nil {
 		mine.EnrolDate = enrol
@@ -191,9 +196,30 @@ func (mine *StudentInfo) UpdateStatus(st StudentStatus, operator string) error {
 	if mine.Status == st {
 		return nil
 	}
+	if mine.Status == StudentUnknown && st == StudentActive {
+		enrol := new(proxy.DateInfo)
+		enrol.Parse(mine.EnrolDate.String())
+		class, _ := cacheCtx.GetClassByEnrol(mine.School, enrol, mine.ClassNo)
+		if class != nil {
+			_ = class.AddStudent(mine)
+		}
+	}
 	err := nosql.UpdateStudentState(mine.UID, operator, uint8(st))
 	if err == nil {
 		mine.Status = st
+		mine.Operator = operator
+		mine.UpdateTime = time.Now()
+	}
+	return err
+}
+
+func (mine *StudentInfo) UpdateClassNumber(num uint16, operator string) error {
+	if mine.ClassNo == num {
+		return nil
+	}
+	err := nosql.UpdateStudentNumber(mine.UID, operator, num)
+	if err == nil {
+		mine.ClassNo = num
 		mine.Operator = operator
 		mine.UpdateTime = time.Now()
 	}

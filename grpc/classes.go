@@ -47,7 +47,7 @@ func (mine *ClassService) AddOne(ctx context.Context, in *pb.ReqClassAdd, out *p
 	}
 	in.Name = strings.TrimSpace(in.Name)
 
-	list, err1 := school.CreateClasses(in.Name, in.Enrol, in.Operator, uint16(in.Count), uint16(in.Type))
+	list, err1 := school.CreateClasses(in.Name, in.Enrol, in.Operator, uint16(in.Count), cache.ClassType(in.Type))
 	if err1 != nil {
 		out.Status = outError(path, err1.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -154,6 +154,8 @@ func (mine *ClassService) GetByFilter(ctx context.Context, in *pb.RequestPage, o
 				return nil
 			}
 			classes = school.GetClassesByEnrol(date.Year, date.Month)
+		} else if in.Filter == "menus" {
+			classes = school.GetAllClasses()
 		}
 		for _, class := range classes {
 			out.List = append(out.List, switchClass(class))
@@ -315,6 +317,7 @@ func (mine *ClassService) AppendStudent(ctx context.Context, in *pb.ReqClassStud
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
 	}
+	_ = student.UpdateClassNumber(info.Number, in.Operator)
 	if oClass != nil {
 		_ = oClass.RemoveStudent(in.Student, "change class", student.ID, cache.StudentLeave)
 	}

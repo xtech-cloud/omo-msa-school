@@ -67,7 +67,9 @@ func (mine *SchoolInfo) initClasses() {
 		for _, item := range classes {
 			tmp := new(ClassInfo)
 			tmp.initInfo(mine.MaxGrade(), item)
-			mine.classes = append(mine.classes, tmp)
+			if tmp.Grade() <= mine.MaxGrade() {
+				mine.classes = append(mine.classes, tmp)
+			}
 		}
 	} else {
 		mine.classes = make([]*ClassInfo, 0, 1)
@@ -289,7 +291,7 @@ func (mine *SchoolInfo) GetGradeStudents() []*PairIntInfo {
 //endregion
 
 //region Student Fun
-func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, string, error) {
+func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, *ClassInfo, error) {
 	list := make([]proxy.CustodianInfo, 0, 2)
 	if data.Custodians != nil {
 		for _, custodian := range data.Custodians {
@@ -300,25 +302,34 @@ func (mine *SchoolInfo) CreateStudent(data *pb.ReqStudentAdd) (*StudentInfo, str
 			})
 		}
 	}
-	date := proxy.DateInfo{
-		Name:  fmt.Sprintf("%d-%d-%d", time.Now().Year(), time.January, 1),
-		Year:  uint16(time.Now().Year()),
-		Month: time.January,
-		Day:   1,
+
+	enrol := new(proxy.DateInfo)
+	er := enrol.Parse(data.Enrol)
+	if er != nil {
+		enrol.Year = uint16(time.Now().Year())
+		enrol.Month = time.September
+		enrol.Day = 1
 	}
-	student, err := cacheCtx.createStudent(mine.UID, data.Name, data.Sn, data.Card, data.Operator, date, uint8(data.Sex), StudentStatus(data.Status), list)
+	student, err := cacheCtx.createStudent(mine.UID, data.Name, data.Sn, data.Card, data.Operator, enrol, uint8(data.Sex), StudentStatus(data.Status), list)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
+	_ = student.UpdateClassNumber(uint16(data.Number), data.Operator)
 	class := mine.GetClass(data.Class)
 	if class != nil {
 		_ = class.AddStudent(student)
 		_ = student.UpdateEnrol(class.EnrolDate, data.Operator)
+		_ = student.UpdateClassNumber(class.Number, data.Operator)
+	} else {
+		class, _ = cacheCtx.GetClassByEnrol(mine.UID, enrol, uint16(data.Number))
+		if class != nil {
+			_ = student.UpdateEnrol(class.EnrolDate, data.Operator)
+		}
 	}
 	if len(data.Entity) > 0 {
 		_ = student.BindEntity(data.Entity, data.Operator)
 	}
-	return student, data.Class, nil
+	return student, class, nil
 }
 
 func (mine *SchoolInfo) GetStudentByEntity(entity string) *StudentInfo {
@@ -332,6 +343,20 @@ func (mine *SchoolInfo) GetStudentByEntity(entity string) *StudentInfo {
 		return info
 	}
 	return nil
+}
+
+func (mine *SchoolInfo) GetStudentClassByEntity(entity string) (*ClassInfo, *StudentInfo) {
+	if entity == "" {
+		return nil, nil
+	}
+	db, err := nosql.GetStudentByEntity(mine.UID, entity)
+	if err == nil {
+		info := new(StudentInfo)
+		info.initInfo(db)
+		cla := mine.GetClassByStudent(info.UID, StudentActive)
+		return cla, info
+	}
+	return nil, nil
 }
 
 func (mine *SchoolInfo) GetStudentBySN(sn string) *StudentInfo {
@@ -388,19 +413,28 @@ func (mine *SchoolInfo) GetStudentsByCustodian(phone, name string) []*StudentInf
 	return list
 }
 
-func (mine *SchoolInfo) GetStudentsByEnrol(enrol string) []*StudentInfo {
+func (mine *SchoolInfo) GetStudentsByEnrol(enrol string, num uint16) []*StudentInfo {
 	list := make([]*StudentInfo, 0, 2)
 	if enrol == "" {
 		return list
 	}
-	array, err := nosql.GetStudentsByEnrol(mine.UID, enrol)
+	year, _ := strconv.Atoi(enrol)
+	array, err := nosql.GetStudentsByEnrol(mine.UID, year)
 	if err != nil {
 		return list
 	}
 	for _, student := range array {
-		info := new(StudentInfo)
-		info.initInfo(student)
-		list = append(list, info)
+		if num < 1 {
+			info := new(StudentInfo)
+			info.initInfo(student)
+			list = append(list, info)
+		} else {
+			if student.Number == num {
+				info := new(StudentInfo)
+				info.initInfo(student)
+				list = append(list, info)
+			}
+		}
 	}
 	return list
 }
@@ -519,11 +553,11 @@ func (mine *SchoolInfo) CreateSimpleStudent(name, entity, sn, card, operator str
 //	return student, nil
 //}
 
-func (mine *SchoolInfo) appendStudent(student *StudentInfo, operator string, grade uint8, num, kind uint16) {
+func (mine *SchoolInfo) appendStudent(student *StudentInfo, operator string, grade uint8, num uint16, kind ClassType) {
 	if student == nil {
 		return
 	}
-	date := proxy.DateInfo{
+	date := &proxy.DateInfo{
 		Year:  uint16(time.Now().Year() - int(grade) + 1),
 		Month: time.January,
 		Day:   1,

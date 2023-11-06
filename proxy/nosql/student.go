@@ -23,7 +23,9 @@ type Student struct {
 	Entity    string         `json:"entity" bson:"entity"`
 	EnrolDate proxy.DateInfo `json:"enrol" bson:"enrol"`
 	Status    uint8          `json:"status" bson:"status"`
-	Sex       uint8          `json:"sex" bson:"sex"`
+	Number    uint16         `json:"number" bson:"number"`
+
+	Sex uint8 `json:"sex" bson:"sex"`
 	//学籍号
 	SID string `json:"sid" bson:"sid"`
 	// 系统生成的身份序列号
@@ -269,10 +271,9 @@ func GetStudentsByCustodian2(phone string) ([]*Student, error) {
 	return items, nil
 }
 
-func GetStudentsByEnrol(school, enrol string) ([]*Student, error) {
+func GetStudentsByEnrol(school string, year int) ([]*Student, error) {
 	var items = make([]*Student, 0, 10)
-	//msg := bson.M{"school":school, "custodians.phone": phone}
-	msg := bson.M{"school": school, "deleteAt": new(time.Time), "enrol": bson.M{"$elemMatch": bson.M{"name": bson.M{"$elemMatch": bson.M{"$eq": enrol}}}}}
+	msg := bson.M{"school": school, "deleteAt": new(time.Time), "enrol.year": year}
 	cursor, err1 := findMany(TableStudent, msg, 0)
 	if err1 != nil {
 		return nil, err1
@@ -379,6 +380,12 @@ func UpdateStudentEntity(uid, entity, operator string) error {
 
 func UpdateStudentState(uid, operator string, st uint8) error {
 	msg := bson.M{"status": st, "operator": operator, "updatedAt": time.Now()}
+	_, err := updateOne(TableStudent, uid, msg)
+	return err
+}
+
+func UpdateStudentNumber(uid, operator string, num uint16) error {
+	msg := bson.M{"number": num, "operator": operator, "updatedAt": time.Now()}
 	_, err := updateOne(TableStudent, uid, msg)
 	return err
 }
