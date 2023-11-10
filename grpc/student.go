@@ -39,7 +39,11 @@ func switchStudent(info *cache.StudentInfo, class *cache.ClassInfo) *pb.StudentI
 				tmp.Kvs = append(tmp.Kvs, &pb.PairInfo{Key: tmp.Class, Value: cla.FullName()})
 			} else {
 				tmp.Class = fmt.Sprintf("%d-%d", info.EnrolDate.Year, tmp.Number)
-				tmp.Kvs = append(tmp.Kvs, &pb.PairInfo{Key: tmp.Class, Value: fmt.Sprintf("%d年级%d班", info.Grade(), info.ClassNo)})
+				if info.ClassNo > 0 {
+					tmp.Kvs = append(tmp.Kvs, &pb.PairInfo{Key: tmp.Class, Value: fmt.Sprintf("%d年级%d班", info.Grade(), info.ClassNo)})
+				} else {
+					tmp.Kvs = append(tmp.Kvs, &pb.PairInfo{Key: tmp.Class, Value: fmt.Sprintf("%d年级", info.Grade())})
+				}
 			}
 		} else {
 			tmp.Class = class.UID
@@ -183,7 +187,8 @@ func (mine *StudentService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 				list = append(list, tmp)
 			}
 		} else if in.Filter == "search" {
-			list = school.SearchStudents(in.Value)
+			act := in.Params == "0"
+			list = school.SearchStudents(in.Value, act)
 		} else if in.Filter == "enrol" {
 			list = school.GetStudentsByEnrol(in.Value, uint16(in.Number))
 		} else if in.Filter == "bind" {

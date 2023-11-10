@@ -225,14 +225,27 @@ func (mine *cacheContext) GetSchoolBy(uid string) (*SchoolInfo, error) {
 	if len(uid) < 1 {
 		return nil, errors.New("the school uid is empty")
 	}
-	for i := 0; i < len(mine.schools); i += 1 {
-		if mine.schools[i].UID == uid || mine.schools[i].Scene == uid {
-			return mine.schools[i], nil
+
+	info, er := mine.GetSchoolByScene(uid)
+	if info == nil {
+		return mine.getSchool(uid)
+	}
+
+	return info, er
+}
+
+func (mine *cacheContext) getSchool(uid string) (*SchoolInfo, error) {
+	if len(uid) < 1 {
+		return nil, errors.New("the school uid is empty")
+	}
+	for _, school := range mine.schools {
+		if school.UID == uid {
+			return school, nil
 		}
 	}
-	db, _ := nosql.GetSchool(uid)
-	if db == nil {
-		return mine.getSchoolScene(uid)
+	db, err := nosql.GetSchool(uid)
+	if err != nil {
+		return nil, err
 	}
 	school := new(SchoolInfo)
 	school.initInfo(db)
@@ -240,13 +253,13 @@ func (mine *cacheContext) GetSchoolBy(uid string) (*SchoolInfo, error) {
 	return school, nil
 }
 
-func (mine *cacheContext) getSchoolScene(scene string) (*SchoolInfo, error) {
+func (mine *cacheContext) GetSchoolByScene(scene string) (*SchoolInfo, error) {
 	if scene == "" {
-		return nil, errors.New("the school uid is empty")
+		return nil, errors.New("the scene uid is empty")
 	}
-	for i := 0; i < len(mine.schools); i += 1 {
-		if mine.schools[i].Scene == scene {
-			return mine.schools[i], nil
+	for _, school := range mine.schools {
+		if school.Scene == scene {
+			return school, nil
 		}
 	}
 	db, err := nosql.GetSchoolByScene(scene)

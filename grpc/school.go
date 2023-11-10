@@ -62,10 +62,9 @@ func (mine *SchoolService) AddOne(ctx context.Context, in *pb.ReqSchoolAdd, out 
 		return nil
 	}
 	in.Name = strings.TrimSpace(in.Name)
-
 	var info *cache.SchoolInfo
 	var err error
-	info, _ = cache.Context().GetSchoolBy(in.Scene)
+	info, err = cache.Context().GetSchoolByScene(in.Scene)
 	if info == nil {
 		info, err = cache.Context().CreateSchool(in.Name, in.Entity, in.Scene, int(in.Grade))
 	}

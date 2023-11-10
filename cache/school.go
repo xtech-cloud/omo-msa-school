@@ -692,14 +692,22 @@ func (mine *SchoolInfo) GetAllStudentsByStatus(st StudentStatus) []*StudentInfo 
 	return list
 }
 
-func (mine *SchoolInfo) SearchStudents(flag string) []*StudentInfo {
+func (mine *SchoolInfo) SearchStudents(flag string, act bool) []*StudentInfo {
 	list := make([]*StudentInfo, 0, 100)
 	dbs, err := nosql.GetStudentsByKeyword(mine.UID, flag)
+	var sts []uint
+	if act {
+		sts = []uint{uint(StudentActive), uint(StudentUnknown)}
+	} else {
+		sts = []uint{uint(StudentLeave), uint(StudentDelete), uint(StudentDelete)}
+	}
 	if err == nil {
 		for _, item := range dbs {
-			tmp := new(StudentInfo)
-			tmp.initInfo(item)
-			list = append(list, tmp)
+			if tool.HasItemByUint(sts, uint(item.Status)) {
+				tmp := new(StudentInfo)
+				tmp.initInfo(item)
+				list = append(list, tmp)
+			}
 		}
 	}
 
