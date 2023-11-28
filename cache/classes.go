@@ -581,7 +581,7 @@ func (mine *SchoolInfo) isClassRepeated(list []*ClassInfo, uid string) bool {
 }
 
 func (mine *SchoolInfo) GetClassByEntity(entity string, st StudentStatus) *ClassInfo {
-	student := mine.getStudentByEntity(entity)
+	student := mine.GetStudentByEntity(entity)
 	if student == nil {
 		return nil
 	}

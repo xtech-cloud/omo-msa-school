@@ -307,7 +307,7 @@ func (mine *ClassService) AppendStudent(ctx context.Context, in *pb.ReqClassStud
 		out.Status = outError(path, "not found the class", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	oClass, student := school.GetStudent(in.Student)
+	oClass, student := school.GetClassAndStudent(in.Student)
 	if student == nil {
 		out.Status = outError(path, "not found the student", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -338,7 +338,7 @@ func (mine *ClassService) SubtractStudent(ctx context.Context, in *pb.ReqClassSt
 		return nil
 	}
 
-	class, student := school.GetStudent(in.Student)
+	class, student := school.GetClassAndStudent(in.Student)
 	if student == nil {
 		out.Status = outError(path, "not found the student", pbstatus.ResultStatus_NotExisted)
 		return nil

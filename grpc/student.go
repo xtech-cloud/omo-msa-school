@@ -136,7 +136,7 @@ func (mine *StudentService) GetOne(ctx context.Context, in *pb.RequestInfo, out 
 				class, info = school.GetStudentClassByEntity(in.Value)
 			}
 		} else {
-			class, info = school.GetStudent(in.Uid)
+			class, info = school.GetClassAndStudent(in.Uid)
 		}
 		if info == nil {
 			out.Status = outError(path, "not found the student", pbstatus.ResultStatus_NotExisted)
@@ -193,7 +193,7 @@ func (mine *StudentService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 			list = school.GetStudentsByEnrol(in.Value, uint16(in.Number))
 		} else if in.Filter == "bind" {
 			list = school.GetBindStudents(in.List)
-		} else if in.Filter == "regex" {
+		} else if in.Filter == "entities" {
 
 		}
 	} else {
@@ -237,7 +237,7 @@ func (mine *StudentService) GetList(ctx context.Context, in *pb.RequestPage, out
 	var max uint32 = 0
 	var list []*cache.StudentInfo
 	if in.Filter == "entities" {
-		total, max, list = school.GetActiveStudents(in.Page, in.Number)
+		total, max, list = school.GetActiveBindStudents(in.Page, in.Number)
 	} else if in.Filter == "type" {
 		tp, er := strconv.ParseInt(in.Value, 10, 32)
 		if er == nil {
@@ -284,7 +284,7 @@ func (mine *StudentService) GetArray(ctx context.Context, in *pb.RequestList, ou
 			return nil
 		}
 		for _, uid := range in.List {
-			class, info := school.GetStudent(uid)
+			class, info := school.GetClassAndStudent(uid)
 			if info != nil {
 				out.List = append(out.List, switchStudent(info, class))
 			}
@@ -313,7 +313,7 @@ func (mine *StudentService) UpdateOne(ctx context.Context, in *pb.ReqStudentUpda
 	}
 	in.Name = strings.TrimSpace(in.Name)
 
-	cla, info := school.GetStudent(in.Uid)
+	cla, info := school.GetClassAndStudent(in.Uid)
 	if info == nil {
 		out.Status = outError(path, "not found the student by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -341,7 +341,7 @@ func (mine *StudentService) SetByFilter(ctx context.Context, in *pb.RequestPage,
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	cla, info := school.GetStudent(in.Uid)
+	cla, info := school.GetClassAndStudent(in.Uid)
 	if info == nil {
 		out.Status = outError(path, "not found the student by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -421,7 +421,7 @@ func (mine *StudentService) BindEntity(ctx context.Context, in *pb.ReqStudentBin
 	var info *cache.StudentInfo
 	var cla *cache.ClassInfo
 	if len(in.Uid) > 1 {
-		cla, info = school.GetStudent(in.Uid)
+		cla, info = school.GetClassAndStudent(in.Uid)
 	} else {
 		info = school.GetStudentByCard(in.Card)
 	}
@@ -448,7 +448,7 @@ func (mine *StudentService) UpdateCustodian(ctx context.Context, in *pb.ReqStude
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	cla, info := school.GetStudent(in.Uid)
+	cla, info := school.GetClassAndStudent(in.Uid)
 	if info == nil {
 		out.Status = outError(path, "not found the student by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -471,7 +471,7 @@ func (mine *StudentService) UpdateTags(ctx context.Context, in *pb.RequestList, 
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	_, info := school.GetStudent(in.Uid)
+	_, info := school.GetClassAndStudent(in.Uid)
 
 	if info == nil {
 		out.Status = outError(path, "not found the student by uid", pbstatus.ResultStatus_NotExisted)
@@ -495,7 +495,7 @@ func (mine *StudentService) UpdateStatus(ctx context.Context, in *pb.RequestStat
 		out.Status = outError(path, "not found the school by uid", pbstatus.ResultStatus_NotExisted)
 		return nil
 	}
-	_, info := school.GetStudent(in.Flag)
+	_, info := school.GetClassAndStudent(in.Flag)
 	if info == nil {
 		out.Status = outError(path, "not found the student by uid", pbstatus.ResultStatus_NotExisted)
 		return nil

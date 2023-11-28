@@ -368,7 +368,7 @@ func (mine *cacheContext) GetActiveStudentByEntity(uid string) (*ClassInfo, *Stu
 	for _, school := range mine.schools {
 		student := school.GetStudentByEntity(uid)
 		if student != nil {
-			class, _ := school.GetStudent(student.UID)
+			class, _ := school.GetClassAndStudent(student.UID)
 			if class != nil {
 				return class, student
 			}

@@ -9,6 +9,7 @@ import (
 	"omo.msa.school/proxy/nosql"
 	"omo.msa.school/tool"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -372,20 +373,27 @@ func (mine *SchoolInfo) GetStudentBySN(sn string) *StudentInfo {
 	return nil
 }
 
-func (mine *SchoolInfo) GetStudent(uid string) (*ClassInfo, *StudentInfo) {
+func (mine *SchoolInfo) GetClassAndStudent(uid string) (*ClassInfo, *StudentInfo) {
 	if uid == "" {
 		return nil, nil
+	}
+	student := cacheCtx.GetStudent(uid)
+	if student == nil {
+		student = mine.GetStudentByEntity(uid)
+		if student == nil {
+			return nil, nil
+		}
 	}
 	mine.initClasses()
 	for _, class := range mine.classes {
 		students := class.GetStudentsByStatus(StudentActive)
 		for _, studentUid := range students {
 			if studentUid == uid {
-				return class, mine.getStudent(uid)
+				return class, student
 			}
 		}
 	}
-	return nil, cacheCtx.GetStudent(uid)
+	return nil, student
 }
 
 func (mine *SchoolInfo) GetStudentsByCustodian(phone, name string) []*StudentInfo {
@@ -488,13 +496,16 @@ func studentAlive(db *nosql.Student) bool {
 }
 
 func (mine *SchoolInfo) GetStudentsByName(name string) []*StudentInfo {
+	if name == "" {
+		return nil
+	}
 	list := make([]*StudentInfo, 0, 10)
 	if name == "" {
 		return list
 	}
 	all := mine.AllStudents()
 	for _, info := range all {
-		if info.Name == name {
+		if strings.Contains(info.Name, name) {
 			list = append(list, info)
 		}
 	}
@@ -584,7 +595,7 @@ func (mine *SchoolInfo) RemoveStudent(uid, operator string) error {
 	if uid == "" {
 		return errors.New("the student uid is empty")
 	}
-	class, info := mine.GetStudent(uid)
+	class, info := mine.GetClassAndStudent(uid)
 	if info == nil {
 		return errors.New("not found the student")
 	}
@@ -621,32 +632,6 @@ func (mine *SchoolInfo) hadStudent(uid string) bool {
 	return false
 }
 
-func (mine *SchoolInfo) getStudentByEntity(uid string) *StudentInfo {
-	if uid == "" {
-		return nil
-	}
-	all := mine.AllStudents()
-	for _, info := range all {
-		if info.Entity == uid {
-			return info
-		}
-	}
-	return nil
-}
-
-func (mine *SchoolInfo) getStudent(uid string) *StudentInfo {
-	if uid == "" {
-		return nil
-	}
-	all := mine.AllStudents()
-	for _, info := range all {
-		if info.UID == uid {
-			return info
-		}
-	}
-	return nil
-}
-
 func (mine *SchoolInfo) AllStudents() []*StudentInfo {
 	students, err := nosql.GetStudentsBySchool(mine.UID)
 	if err == nil {
@@ -668,7 +653,7 @@ func (mine *SchoolInfo) AllActEntities() []*StudentInfo {
 	for _, class := range mine.classes {
 		for _, item := range class.Members {
 			if item.Status == uint8(StudentActive) {
-				student := mine.getStudent(item.Student)
+				student := cacheCtx.GetStudent(item.Student)
 				if student != nil && len(student.Entity) > 2 {
 					list = append(list, student)
 				}
@@ -678,16 +663,24 @@ func (mine *SchoolInfo) AllActEntities() []*StudentInfo {
 	return list
 }
 
-func (mine *SchoolInfo) GetAllStudentsByStatus(st StudentStatus) []*StudentInfo {
+func (mine *SchoolInfo) GetAllStudentsByStatus(st StudentStatus, bind bool) []*StudentInfo {
 	arr, err := nosql.GetStudentsByStatus(mine.UID, uint32(st))
 	list := make([]*StudentInfo, 0, len(arr))
 	if err != nil {
 		return list
 	}
 	for _, db := range arr {
-		info := new(StudentInfo)
-		info.initInfo(db)
-		list = append(list, info)
+		if bind {
+			if len(db.Entity) > 2 {
+				info := new(StudentInfo)
+				info.initInfo(db)
+				list = append(list, info)
+			}
+		} else {
+			info := new(StudentInfo)
+			info.initInfo(db)
+			list = append(list, info)
+		}
 	}
 	return list
 }
@@ -723,7 +716,7 @@ func (mine *SchoolInfo) GetStudentsByClass(uid string) []*StudentInfo {
 			if len(array) > 0 {
 				for _, item := range array {
 					if !mine.hadStudentIn(list, item) {
-						info := mine.getStudent(item)
+						info := cacheCtx.GetStudent(item)
 						if info != nil {
 							list = append(list, info)
 						}
@@ -794,7 +787,7 @@ func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint
 	if number < 1 {
 		number = 10
 	}
-	all := mine.GetAllStudentsByStatus(st)
+	all := mine.GetAllStudentsByStatus(st, false)
 	if len(all) < 1 {
 		return 0, 0, make([]*StudentInfo, 0, 1)
 	}
@@ -807,9 +800,9 @@ func (mine *SchoolInfo) GetLeaveStudents(page, number uint32) (uint32, uint32, [
 	if number < 1 {
 		number = 10
 	}
-	list1 := mine.GetAllStudentsByStatus(StudentDelete)
-	list2 := mine.GetAllStudentsByStatus(StudentLeave)
-	list3 := mine.GetAllStudentsByStatus(StudentFinish)
+	list1 := mine.GetAllStudentsByStatus(StudentDelete, false)
+	list2 := mine.GetAllStudentsByStatus(StudentLeave, false)
+	list3 := mine.GetAllStudentsByStatus(StudentFinish, false)
 	all := make([]*StudentInfo, 0, len(list1)+len(list2)+len(list3))
 	all = append(all, list1...)
 	all = append(all, list2...)
@@ -825,8 +818,24 @@ func (mine *SchoolInfo) GetActiveStudents(page, number uint32) (uint32, uint32, 
 	if number < 1 {
 		number = 10
 	}
-	list1 := mine.GetAllStudentsByStatus(StudentActive)
-	list2 := mine.GetAllStudentsByStatus(StudentUnknown)
+	list1 := mine.GetAllStudentsByStatus(StudentActive, false)
+	list2 := mine.GetAllStudentsByStatus(StudentUnknown, false)
+	all := make([]*StudentInfo, 0, len(list1)+len(list2))
+	all = append(all, list1...)
+	all = append(all, list2...)
+	if len(all) < 1 {
+		return 0, 0, make([]*StudentInfo, 0, 1)
+	}
+	total, maxPage, arr := checkPage(page, number, all)
+	return total, maxPage, arr
+}
+
+func (mine *SchoolInfo) GetActiveBindStudents(page, number uint32) (uint32, uint32, []*StudentInfo) {
+	if number < 1 {
+		number = 10
+	}
+	list1 := mine.GetAllStudentsByStatus(StudentActive, true)
+	list2 := mine.GetAllStudentsByStatus(StudentUnknown, true)
 	all := make([]*StudentInfo, 0, len(list1)+len(list2))
 	all = append(all, list1...)
 	all = append(all, list2...)
