@@ -392,7 +392,11 @@ func (mine *cacheContext) GetStudents(array []string) []*StudentInfo {
 }
 
 func (mine *cacheContext) CheckStudentFinish() {
-	dbs, _ := nosql.GetAllStudentsByStatus(uint32(StudentActive))
+	dbs1, _ := nosql.GetAllStudentsByStatus(uint32(StudentActive))
+	dbs2, _ := nosql.GetAllStudentsByStatus(uint32(StudentUnknown))
+	dbs := make([]*nosql.Student, 0, len(dbs1)+len(dbs2))
+	dbs = append(dbs, dbs1...)
+	dbs = append(dbs, dbs2...)
 	for _, db := range dbs {
 		student := new(StudentInfo)
 		student.initInfo(db)

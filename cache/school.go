@@ -465,19 +465,16 @@ func (mine *SchoolInfo) GetBindStudents(grades []string) []*StudentInfo {
 	}
 	length := len(grades)
 	had := false
-	if length == 0 {
+	if length == 0 || tool.HasItem(grades, mine.Scene) {
 		had = true
-	} else if length == 1 {
-		if grades[0] == mine.Scene {
-			had = true
-		}
 	}
 	for _, student := range array {
 		grade := calculateGrade(student.EnrolDate)
-		if length > 1 && tool.HasItem(grades, strconv.Itoa(int(grade))) {
-			had = true
+		add := had
+		if !add && tool.HasItem(grades, strconv.Itoa(int(grade))) {
+			add = true
 		}
-		if studentAlive(student) && had {
+		if studentAlive(student) && add {
 			info := new(StudentInfo)
 			info.initInfo(student)
 			list = append(list, info)
