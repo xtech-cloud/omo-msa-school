@@ -134,7 +134,7 @@ func parseDate(date string) (time.Time, error) {
 func calculateGrade(enrol proxy.DateInfo) uint8 {
 	now := time.Now()
 	diff := now.Year() - int(enrol.Year)
-	if now.Month() > time.Month(7) {
+	if now.Month() < time.Month(8) {
 		return uint8(diff + 1)
 	} else {
 		if diff < 1 {

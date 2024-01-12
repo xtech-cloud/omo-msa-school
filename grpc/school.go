@@ -129,7 +129,7 @@ func (mine *SchoolService) GetByFilter(ctx context.Context, in *pb.RequestPage, 
 		if info != nil {
 			list = append(list, info)
 		}
-	} else if in.Filter == "student_entity" {
+	} else if in.Filter == "student_entity" || in.Filter == "entity" {
 		list = cache.Context().GetSchoolsByStudentEntity(in.Value)
 	} else {
 		total, max, list = cache.Context().AllSchools(in.Page, in.Number)
