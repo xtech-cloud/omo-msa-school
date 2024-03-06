@@ -194,7 +194,13 @@ func (mine *StudentService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 		} else if in.Filter == "bind" {
 			list = school.GetBindStudents(in.List)
 		} else if in.Filter == "entities" {
-
+			list = make([]*cache.StudentInfo, 0, len(in.List))
+			for _, ent := range in.List {
+				tmp := school.GetStudentByEntity(ent)
+				if tmp != nil {
+					list = append(list, tmp)
+				}
+			}
 		}
 	} else {
 		if in.Filter == "entity" {

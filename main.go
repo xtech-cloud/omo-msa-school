@@ -81,6 +81,15 @@ func checkTimer() {
 		return
 	}
 	cli.Start()
+
+	//std := new(grpc.StudentService)
+	//in := &proto.RequestPage{
+	//	Parent: "642b90575fd5b1224731c00a",
+	//	Filter: "bind",
+	//	List:   []string{"1", "2"},
+	//}
+	//out := &proto.ReplyStudentList{}
+	//std.GetByFilter(context.Background(), in, out)
 }
 
 func md5hex(_file string) string {
