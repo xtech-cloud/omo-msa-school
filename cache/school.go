@@ -483,6 +483,15 @@ func (mine *SchoolInfo) GetBindStudents(grades []string) []*StudentInfo {
 	return list
 }
 
+func (mine *SchoolInfo) GetBindCount() uint32 {
+	num, err := nosql.GetBindStudentsBySchool(mine.UID)
+	if err != nil {
+		return 0
+	}
+
+	return num
+}
+
 func studentAlive(db *nosql.Student) bool {
 	if db.Status == uint8(StudentActive) || db.Status == uint8(StudentUnknown) {
 		if len(db.Entity) > 1 {

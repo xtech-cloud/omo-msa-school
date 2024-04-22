@@ -304,7 +304,12 @@ func (mine *StudentService) GetArray(ctx context.Context, in *pb.RequestList, ou
 func (mine *StudentService) GetStatistic(ctx context.Context, in *pb.RequestPage, out *pb.ReplyStatistic) error {
 	path := "student.getStatistic"
 	inLog(path, in)
-
+	if in.Filter == "bind" {
+		info, _ := cache.Context().GetSchoolBy(in.Parent)
+		if info != nil {
+			out.Count = info.GetBindCount()
+		}
+	}
 	out.Status = outLog(path, out)
 	return nil
 }

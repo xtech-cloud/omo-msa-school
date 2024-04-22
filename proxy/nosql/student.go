@@ -191,6 +191,13 @@ func GetStudentsBySchool(uid string) ([]*Student, error) {
 	return items, nil
 }
 
+func GetBindStudentsBySchool(uid string) (uint32, error) {
+	msg := bson.M{"school": uid, "entity": bson.M{"$ne": ""}, "deleteAt": new(time.Time)}
+	num, err1 := getCountBy(TableStudent, msg)
+
+	return uint32(num), err1
+}
+
 func GetAllStudents() ([]*Student, error) {
 	var items = make([]*Student, 0, 100)
 	cursor, err1 := findAll(TableStudent, 0)
