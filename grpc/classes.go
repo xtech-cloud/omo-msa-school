@@ -30,6 +30,9 @@ func switchClass(info *cache.ClassInfo) *pb.ClassInfo {
 	tmp.Owner = info.School
 	tmp.Assistant = info.Assistant
 	tmp.Teachers = info.Teachers
+	if tmp.Name == "" {
+		tmp.Name = info.FullName()
+	}
 	tmp.Students = make([]*pb.MemberInfo, 0, len(info.Members))
 	for _, member := range info.Members {
 		tmp.Students = append(tmp.Students, &pb.MemberInfo{Uid: member.UID, Student: member.Student, Status: uint32(member.Status), Remark: member.Remark})
