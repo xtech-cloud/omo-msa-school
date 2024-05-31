@@ -802,6 +802,10 @@ func (mine *SchoolInfo) GetStudents(page, number uint32, st StudentStatus) (uint
 	return total, maxPage, list
 }
 
+func (mine *SchoolInfo) GetStudentCount(st StudentStatus) uint32 {
+	return nosql.GetStudentCountByStatus(mine.UID, uint32(st))
+}
+
 func (mine *SchoolInfo) GetLeaveStudents(page, number uint32) (uint32, uint32, []*StudentInfo) {
 	if number < 1 {
 		number = 10

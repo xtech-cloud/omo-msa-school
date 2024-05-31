@@ -316,6 +316,12 @@ func GetStudentsByYear(school string, year int) ([]*Student, error) {
 	return items, nil
 }
 
+func GetStudentCountByStatus(school string, st uint32) uint32 {
+	msg := bson.M{"school": school, "status": bson.M{"$eq": st}}
+	num, _ := getCountBy(TableStudent, msg)
+	return uint32(num)
+}
+
 func GetStudentsByStatus(school string, st uint32) ([]*Student, error) {
 	var items = make([]*Student, 0, 10)
 	msg := bson.M{"school": school, "status": bson.M{"$eq": st}}

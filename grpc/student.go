@@ -309,6 +309,16 @@ func (mine *StudentService) GetStatistic(ctx context.Context, in *pb.RequestPage
 		if info != nil {
 			out.Count = info.GetBindCount()
 		}
+	} else if in.Filter == "active" {
+		info, _ := cache.Context().GetSchoolBy(in.Parent)
+		if info != nil {
+			out.Count = info.GetStudentCount(cache.StudentActive) + info.GetStudentCount(cache.StudentUnknown)
+		}
+	} else if in.Filter == "leave" {
+		info, _ := cache.Context().GetSchoolBy(in.Parent)
+		if info != nil {
+			out.Count = info.GetStudentCount(cache.StudentLeave) + info.GetStudentCount(cache.StudentFinish)
+		}
 	}
 	out.Status = outLog(path, out)
 	return nil
@@ -372,6 +382,8 @@ func (mine *StudentService) SetByFilter(ctx context.Context, in *pb.RequestPage,
 		if err == nil {
 			err = info.UpdateEnrol(date, in.Operator)
 		}
+	} else if in.Filter == "status" {
+
 	}
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
