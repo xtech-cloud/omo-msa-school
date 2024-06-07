@@ -718,7 +718,7 @@ func (mine *SchoolInfo) GetStudentsByClass(uid string) []*StudentInfo {
 	mine.initClasses()
 	for _, class := range mine.classes {
 		if class.UID == uid {
-			array := class.GetStudentsByStatus(StudentActive)
+			array := class.GetActiveStudents()
 			if len(array) > 0 {
 				for _, item := range array {
 					if !mine.hadStudentIn(list, item) {

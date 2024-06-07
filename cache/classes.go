@@ -188,6 +188,16 @@ func (mine *ClassInfo) GetStudentsByStatus(st StudentStatus) []string {
 	return list
 }
 
+func (mine *ClassInfo) GetActiveStudents() []string {
+	list := make([]string, 0, len(mine.Members))
+	for _, item := range mine.Members {
+		if item.Status == uint8(StudentActive) || item.Status == uint8(StudentUnknown) {
+			list = append(list, item.Student)
+		}
+	}
+	return list
+}
+
 func (mine *ClassInfo) GetStudents() []string {
 	list := make([]string, 0, len(mine.Members))
 	for _, item := range mine.Members {
@@ -440,6 +450,11 @@ func (mine *SchoolInfo) GetClasses(status StudentStatus) []*ClassInfo {
 		}
 	}
 	return list
+}
+
+func (mine *SchoolInfo) GetActClasses() []*ClassInfo {
+	mine.initClasses()
+	return mine.classes
 }
 
 func (mine *SchoolInfo) GetClassesByPage(page, number uint32, st int32) (uint32, uint32, []*ClassInfo) {

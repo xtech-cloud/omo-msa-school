@@ -95,6 +95,10 @@ func (mine *ClassService) GetList(ctx context.Context, in *pb.RequestInfo, out *
 	if in.Filter == "status" {
 		state, _ = strconv.ParseUint(in.Value, 10, 32)
 		total, max, list = school.GetClassesByPage(0, 0, int32(state))
+	} else if in.Filter == "active" {
+		list = school.GetActClasses()
+	} else if in.Filter == "pass" {
+		list = school.GetActClasses()
 	} else {
 		total, max, list = school.GetClassesByPage(0, 0, -1)
 	}
