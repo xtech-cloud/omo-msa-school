@@ -346,6 +346,30 @@ func (mine *SchoolInfo) GetStudentByEntity(entity string) *StudentInfo {
 	return nil
 }
 
+func (mine *SchoolInfo) GetStudentBy(uid string) *StudentInfo {
+	if uid == "" {
+		return nil
+	}
+	info := mine.GetStudentByEntity(uid)
+	if info != nil {
+		return info
+	}
+	return mine.GetStudentByUID(uid)
+}
+
+func (mine *SchoolInfo) GetStudentByUID(uid string) *StudentInfo {
+	if uid == "" {
+		return nil
+	}
+	db, err := nosql.GetStudent(uid)
+	if err == nil {
+		info := new(StudentInfo)
+		info.initInfo(db)
+		return info
+	}
+	return nil
+}
+
 func (mine *SchoolInfo) GetStudentClassByEntity(entity string) (*ClassInfo, *StudentInfo) {
 	if entity == "" {
 		return nil, nil
@@ -715,21 +739,16 @@ func (mine *SchoolInfo) SearchStudents(flag string, act bool) []*StudentInfo {
 
 func (mine *SchoolInfo) GetStudentsByClass(uid string) []*StudentInfo {
 	list := make([]*StudentInfo, 0, 100)
-	mine.initClasses()
-	for _, class := range mine.classes {
-		if class.UID == uid {
-			array := class.GetActiveStudents()
-			if len(array) > 0 {
-				for _, item := range array {
-					if !mine.hadStudentIn(list, item) {
-						info := cacheCtx.GetStudent(item)
-						if info != nil {
-							list = append(list, info)
-						}
-					}
-				}
-			}
-			break
+	cla := mine.GetClass(uid)
+	if cla == nil {
+		return list
+	}
+	dbs, _ := nosql.GetStudentsByEnrol(cla.School, int(cla.EnrolDate.Year))
+	for _, db := range dbs {
+		stu := new(StudentInfo)
+		stu.initInfo(db)
+		if stu.Grade() == cla.Grade() && stu.ClassNo == cla.Number {
+			list = append(list, stu)
 		}
 	}
 	return list

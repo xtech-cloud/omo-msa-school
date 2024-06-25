@@ -201,6 +201,11 @@ func (mine *StudentService) GetByFilter(ctx context.Context, in *pb.RequestPage,
 					list = append(list, tmp)
 				}
 			}
+		} else {
+			student := school.GetStudentBy(in.Value)
+			if student != nil {
+				list = append(list, student)
+			}
 		}
 	} else {
 		if in.Filter == "entity" {

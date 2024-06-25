@@ -2,6 +2,7 @@ package cache
 
 import (
 	"errors"
+	"fmt"
 	"github.com/micro/go-micro/v2/logger"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.school/config"
@@ -89,6 +90,12 @@ func checkSequences() {
 			_ = nosql.DeleteSequence(s.UID.Hex())
 		}
 	}
+}
+
+func DebugClasses() {
+	scene, _ := cacheCtx.GetSchoolBy("66751ae7637e0344a5c3eec7")
+	list := scene.GetActClasses()
+	fmt.Sprintf("clsss count = %d", len(list))
 }
 
 func checkPage[T any](page, number uint32, all []T) (uint32, uint32, []T) {

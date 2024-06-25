@@ -81,7 +81,7 @@ func checkTimer() {
 		return
 	}
 	cli.Start()
-
+	//cache.DebugClasses()
 	//std := new(grpc.StudentService)
 	//in := &proto.RequestPage{
 	//	Parent: "642b90575fd5b1224731c00a",
